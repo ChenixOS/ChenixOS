@@ -28,6 +28,9 @@ Chenix OS是基于X86-64位架构开发的64位类Unix操作系统，目的是�
 - 内置对ACPI、PIC、APIC、I/O APIC、PCI/PCIe的驱动实现
 - 大部分的POSIX/LibC支持
 
+#### 实验性功能
+- AHCI基本可用（在QEMU和VBox上可用，VMWare上状态不正常）
+
 #### TODO:
 
 - 支持抢占式多任务
