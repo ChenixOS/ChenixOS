@@ -7,15 +7,20 @@ Chenix OS是基于X86-64位架构开发的64位类Unix操作系统，目的是�
 - 构建环境：Ubuntu
 - 构建工具：GCC、Mingw-GCC、NASM、mkfs.fat、mkfs.ext2、MTOOLS、QEMU
 - 开发环境：VSCode
-- 开源协议：Apache V2 (以及额外条款)
+- 开源协议：Apache V2 (额外条款,主要是关于版权和专利授权的)
 
 #### 各目录的用途
 
 `build`     编译和构建需要用到的文件或者程序
+
 `dep`       引用的相关头文件和库
+
 `docs`      相关的开发文档以及说明文件
+
 `kernel`    内核及相关内置驱动的源代码目录
+
 `libs`      提供给用户进行开发使用和编译使用的库
+
 `userland`  用户层的相关程序
 
 

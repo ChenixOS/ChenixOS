@@ -200,3 +200,28 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+
+
+==================================================================================
+
+额外条款
+
+1.当您或者您的组织向本软件及其所在的开源仓库、公共仓库提交时，既默认您同意并授权，您向公共所提交的代码从
+您提交之时起，该软件的任何接收者均享有永久的、全球范围内的、非排他性的、免费的、免版税的、不可撤销的版权许可，
+以复制、准备衍生作品、公开展示、公开表演、再许可和分发您的贡献和此类衍生作品。
+2.如果您或者您的组织的提交贡献包含了您所拥有的专利技术、专属许可的技术亦或者著作权衍生，即可认为从您向本软件
+及其所在开源仓库、公共仓库提交之时起，您已经授权许可该软件的任何接收者在本软件许可范围内享有永久的、全球范围
+内的、非排他性的、免费的、免版税的、不可撤销的专利许可，以复制、准备衍生作品、公开展示、公开表演、再许可和
+分发您的贡献和此类衍生作品。
+3.本软件及本软件的附属、衍生品，均需保留Apache许可证和本条款。当您只以二进制形式公布本软件或者本软件的衍生作品时，
+也需在发行时声明该许可证。
+
+
+EXCEPTION
+
+1.When you or your organization submit this software and its open source repositories or public repositories, it is assumed that you agree and authorize it. From the time you submit the code to the public, any recipient of the software has a permanent, global, non exclusive, free, royalty free, irrevocable copyright license to copy, prepare derivative works, publicly display, publicly perform, sublicense, and distribute your contributions and such derivative works.
+
+2.If your or your organization's submitted contributions include patented technology, exclusively licensed technology, or copyright derivatives that you own, it shall be deemed that from the time you submit to this software and its open source repository or public repository, you have authorized any recipient of the software to enjoy a permanent, global, non exclusive, free, royalty free, irrevocable patent license within the scope of this software license to copy, prepare derivative works, publicly display, publicly perform, sublicense, and distribute your contributions and such derivative works.
+
+3.This software and its affiliates and derivatives must retain the Apache license and these terms. When you only publish this software or its derivative works in binary form, you also need to declare the license at the time of distribution.
