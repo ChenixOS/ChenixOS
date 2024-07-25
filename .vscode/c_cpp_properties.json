@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Dev",
+            "intelliSenseMode": "gcc-x64",
+            "includePath": [
+                "dep/gnu-efi/inc",
+                "dep/gnu-efi/inc/x86_64",
+                "kernel/Kernel",
+                "kernel/Kernel/include",
+                "libs/libsimpleos2",
+                "dep/acpica/include",
+                "libs/libc/include"
+            ],
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}
