@@ -1,5 +1,5 @@
 # ===========================================
-#        $(OS_NAME)`s Build Tools
+#        ChenixOS`s Build Tools
 # ===========================================
 
 # currently, only Debug and Release have special meaning

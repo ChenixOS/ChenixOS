@@ -12,6 +12,8 @@
 #include "arch/SSE.h"
 #include "arch/Port.h"
 
+#include "CpuInfo.h"
+
 namespace SMP {
 
     extern "C" int smp_Start;
@@ -43,11 +45,12 @@ namespace SMP {
         // SSE::InitCore();
         
         started = true;
-
         __asm__ __volatile__ (
             "lock incq (%0)"
             : : "r"(&startCount)
         );
+
+        InitCpuInfo();
         
         Scheduler::ThreadUnsetSticky();
         Scheduler::ThreadEnableInterrupts();
@@ -128,6 +131,9 @@ namespace SMP {
         uint64 stackOffset = (uint64)&smp_StackAddress - (uint64)&smp_Start;
 
         uint64 bootAPIC = APIC::GetID();
+
+        // 初始化当前CPU的信息
+        InitCpuInfo();
 
         for(uint64 i = 0; i < g_NumCores; i++) {
             if(g_Info[i].apicID == bootAPIC)

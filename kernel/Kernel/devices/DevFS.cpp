@@ -145,3 +145,43 @@ static void Init() {
     VFS::FileSystemRegistry::RegisterFileSystem("devFS", DevFSFactory);
 }
 REGISTER_INIT_FUNC(Init, INIT_STAGE_FSDRIVERS);
+
+// =======================================================================
+
+#include "fs/procfs/ProcFs.h"
+#include "init/Init.h"
+
+void devfs_show_devices(ProcNode *node, VFS::Node *in, StringBuffer *buffer) 
+{
+    char buf[255];
+
+    g_Lock.Spinlock();
+
+    buffer->append("Character devices:\n");
+    for(auto &driver : g_Devices) {
+        if(!driver.blockDev) {
+            buffer->append(itoa(driver.driverID, buf, 10));
+            buffer->append(" ");
+            buffer->append(driver.name);
+            buffer->append("\n");
+        }
+    }
+
+    buffer->append("\nBlock devices:\n");
+    for(auto &driver : g_Devices) {
+        if(driver.blockDev) {
+            buffer->append(itoa(driver.driverID, buf, 10));
+            buffer->append(" ");
+            buffer->append(driver.name);
+            buffer->append("\n");
+        }
+    }
+
+    g_Lock.Unlock();
+}
+
+static void MyInit() {
+    procfs_new_string_callback_node("devices",devfs_show_devices);
+}
+
+REGISTER_INIT_FUNC(MyInit, INIT_STAGE_DELAY);

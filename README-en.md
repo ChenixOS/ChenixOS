@@ -14,9 +14,9 @@ ChenixOS is a 64 bit Unix like operating system developed based on the X86-64 bi
 ### Schedule
 The following are the planned features to be implemented, and we welcome everyone to raise issues and PRs!
 
--Please submit Chinese issues to: https://gitee.com/chenixos/chenixos
--Please submit the English issue to: https://github.com/ChenixOS/ChenixOS
--For those who can speak Chinese but insist on submitting in English, please go to: file:///dev/null
+- Please submit Chinese issues to: https://gitee.com/chenixos/chenixos
+- Please submit the English issue to: https://github.com/ChenixOS/ChenixOS
+- For those who can speak Chinese but insist on submitting in English, please go to: file:///dev/null
 
 #### Supported functions
 

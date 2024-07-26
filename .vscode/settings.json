@@ -87,6 +87,24 @@
         "unordered_set": "c",
         "kmalloc.h": "c",
         "memory.h": "c",
-        "__node_handle": "cpp"
+        "__node_handle": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "future": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "variant": "cpp",
+        "__bit_reference": "cpp",
+        "__bits": "cpp",
+        "__config": "cpp",
+        "__debug": "cpp",
+        "__errc": "cpp",
+        "__locale": "cpp",
+        "__mutex_base": "cpp",
+        "__threading_support": "cpp",
+        "__tuple": "cpp",
+        "__verbose_abort": "cpp",
+        "locale": "cpp"
     }
 }
