@@ -191,7 +191,8 @@ ahci_port_clear(struct ahci_ctrl_s *ctrl, uint32 pnr) {
         // mdelay (1);
         // Scheduler::Yield();
         uint64 start = Time::GetTSC();
-        for(;(Time::GetTSC() - start) < Time::GetTSCTicksPerMilli();) {
+        for(;(Time::GetTSC() - start) < (Time::GetTSCTicksPerMilli() * 5);) {
+            barrier();
         }
         ahci_port_writel(ctrl, pnr, PORT_SCR_CTL, val);
     }
@@ -213,7 +214,7 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
     struct ahci_list_s *list = port_gf->list;
     uint32 pnr                  = port_gf->pnr;
 
-    klog_info("AHCI","buffer=%X phys=%X",buffer,MemoryManager::KernelToPhysPtr(buffer));
+    klog_debug("AHCI","buffer=%X phys=%X",buffer,MemoryManager::KernelToPhysPtr(buffer));
 
     cmd->fis.reg       = 0x27;
     cmd->fis.pmp_type  = 1 << 7; /* cmd fis */
@@ -263,7 +264,7 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
                 }
             }
             if(((Time::GetTSC() - start) / Time::GetTSCTicksPerMilli()) >= AHCI_REQUEST_TIMEOUT) {
-				return -11;
+				return -DISK_RET_ETIMEOUT;
 			}
             Scheduler::Yield();
         }
@@ -275,7 +276,7 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
                                   ATA_CB_STAT_ERR)) &&
                ATA_CB_STAT_RDY == (status & (ATA_CB_STAT_RDY)));
     
-    klog_info("AHCI","error=%X",(uint64) ahci_port_readl(ctrl, pnr, PORT_SCR_ERR));
+    klog_info("AHCI","error=%X", error);
 
 	if (success) {
         klog_debug("AHCI", "AHCI/%d: ... finished, status 0x%x, OK", pnr,
@@ -286,7 +287,7 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
 
         ahci_port_clear(ctrl, pnr);
     }
-    return success ? 0 : -12;
+    return success ? 0 : -DISK_RET_ECONTROLLER;
 }
 
 
@@ -431,10 +432,8 @@ static int ahci_port_setup(struct ahci_port_s *port)
     cmd &= ~PORT_CMD_ICC_MASK;
     cmd |= PORT_CMD_SPIN_UP | PORT_CMD_POWER_ON | PORT_CMD_ICC_ACTIVE;
     ahci_port_writel(ctrl, pnr, PORT_CMD, cmd);
-
-    // ahci_port_writel(ctrl, pnr, PORT_IRQ_STAT, ~0);
-    // ahci_port_writel(ctrl, pnr, PORT_IRQ_MASK, 0);
     
+    /* wait for device link */
 	uint64 start = Time::GetTSC();
     for (;;) {
         stat = ahci_port_readl(ctrl, pnr, PORT_SCR_STAT);
@@ -444,11 +443,12 @@ static int ahci_port_setup(struct ahci_port_s *port)
         }
 		if(((Time::GetTSC() - start) / Time::GetTSCTicksPerMilli()) >= AHCI_LINK_TIMEOUT) {
 			klog_debug("AHCI", "AHCI/%d: link down 1", port->pnr);
-			return -1;
+			return -DISK_RET_ENOTREADY;
 		}
 		Scheduler::Yield();
     }
 
+    /* clear device status */
     ahci_port_clear(port->ctrl, port->pnr);
 
 	/* clear error status */
@@ -465,7 +465,7 @@ static int ahci_port_setup(struct ahci_port_s *port)
             break;
         if(((Time::GetTSC() - start) / Time::GetTSCTicksPerMilli()) >= AHCI_REQUEST_TIMEOUT) {
 			klog_info("AHCI","AHCI/%d: device not ready (tf 0x%x)", port->pnr, tf);
-			return -3;
+			return -DISK_RET_ETIMEOUT;
 		}
         Scheduler::Yield();
     }
@@ -474,6 +474,8 @@ static int ahci_port_setup(struct ahci_port_s *port)
     cmd |= PORT_CMD_START;
     ahci_port_writel(ctrl, pnr, PORT_CMD, cmd);
 
+    // TODO: VMWare执行时出错
+    /* send command to device */
     uint32 type = ahci_port_readl(ctrl, pnr, PORT_SIG);
     for(int i = 0; i < 3; i++) {
         if(type == SATA_SIG_ATA) {
@@ -588,7 +590,7 @@ static int ahci_port_setup(struct ahci_port_s *port)
         uint8 iscd = ((buffer[0] >> 8) & 0x1f) == 0x05;
         if (!iscd) {
             // dprintf(1, "AHCI/%d: atapi device isn't a cdrom", port->pnr);
-            return -5;
+            return -DISK_RET_EMEDIA;
         }
         /*port->desc = znprintf(MAXDESCSIZE
                               , "DVD/CD [AHCI/%d: %s ATAPI-%d DVD/CD]"
@@ -598,102 +600,6 @@ static int ahci_port_setup(struct ahci_port_s *port)
         port->prio = bootprio_find_ata_device(ctrl->pci_tmp, pnr, 0);*/
     }
 	return 0;
-}
-
-#define CDROM_CDB_SIZE 12
-
-int
-default_process_op(struct disk_op_s *op)
-{
-    switch (op->command) {
-    case CMD_FORMAT:
-    case CMD_RESET:
-    case CMD_ISREADY:
-    case CMD_VERIFY:
-    case CMD_SEEK:
-        // Return success if the driver doesn't implement these commands
-        return DISK_RET_SUCCESS;
-    default:
-        return DISK_RET_EPARAM;
-    }
-}
-
-/*int ahci_atapi_process_op(struct disk_op_s *op)
-{
-    struct ahci_port_s *port_gf = container_of(
-        op->drive_fl, struct ahci_port_s, drive);
-    struct ahci_cmd_s *cmd = port_gf->cmd;
-
-    if (op->command == CMD_WRITE || op->command == CMD_FORMAT)
-        return DISK_RET_EWRITEPROTECT;
-    int blocksize = scsi_fill_cmd(op, cmd->atapi, CDROM_CDB_SIZE);
-    if (blocksize < 0)
-        return default_process_op(op);
-    sata_prep_atapi(&cmd->fis, blocksize);
-    int rc = ahci_command(port_gf, 0, 1, op->buf_fl, op->count * blocksize);
-    if (rc < 0)
-        return DISK_RET_EBADTRACK;
-    return DISK_RET_SUCCESS;
-}*/
-
-// read/write count blocks from a harddrive, op->buf_fl must be word aligned
-static int
-ahci_disk_readwrite_aligned(struct ahci_port_s *port_gf,struct disk_op_s *op, int iswrite)
-{
-    // struct ahci_port_s *port_gf = container_of(
-    //    op->drive_fl, struct ahci_port_s, drive);
-    struct ahci_cmd_s *cmd = port_gf->cmd;
-    int rc;
-
-    sata_prep_readwrite(&cmd->fis, op, iswrite);
-    rc = ahci_command(port_gf, iswrite, 0, op->buf_fl,
-                      op->count * DISK_SECTOR_SIZE);
-    // dprintf(8, "ahci disk %s, lba %6x, count %3x, buf %p, rc %d",
-    //        iswrite ? "write" : "read", (u32)op->lba, op->count, op->buf_fl, rc);
-    if (rc < 0)
-        return DISK_RET_EBADTRACK;
-    return DISK_RET_SUCCESS;
-}
-
-// read/write count blocks from a harddrive.
-static int
-ahci_disk_readwrite(struct ahci_port_s *port_gf,struct disk_op_s *op, int iswrite)
-{
-    // if caller's buffer is word aligned, use it directly
-    if ((((uint32)(uint64) op->buf_fl) & 1) == 0)
-        return ahci_disk_readwrite_aligned(port_gf, op, iswrite);
-
-    // Use a word aligned buffer for AHCI I/O
-    int rc;
-    struct disk_op_s localop = *op;
-    uint8 *alignedbuf_fl = (uint8 *)bounce_buf_fl;
-    uint8 *position = (uint8*)op->buf_fl;
-
-    localop.buf_fl = alignedbuf_fl;
-    localop.count = 1;
-
-    if (iswrite) {
-        uint16 block;
-        for (block = 0; block < op->count; block++) {
-            kmemcpy (alignedbuf_fl, position, DISK_SECTOR_SIZE);
-            rc = ahci_disk_readwrite_aligned (port_gf,&localop, 1);
-            if (rc)
-                return rc;
-            position += DISK_SECTOR_SIZE;
-            localop.lba++;
-        }
-    } else { // read
-        uint16 block;
-        for (block = 0; block < op->count; block++) {
-            rc = ahci_disk_readwrite_aligned (port_gf,&localop, 0);
-            if (rc)
-                return rc;
-            kmemcpy (position, alignedbuf_fl, DISK_SECTOR_SIZE);
-            position += DISK_SECTOR_SIZE;
-            localop.lba++;
-        }
-    }
-    return DISK_RET_SUCCESS;
 }
 
 static struct ahci_ctrl_s* g_ahciBaseCtrl = nullptr;
@@ -772,13 +678,14 @@ void AhciDeviceDriver::ScanDevice(const PCIe::Device& device) {
     val = ahci_ctrl_readl(ctrl, HOST_CTL);
     ahci_ctrl_writel(ctrl, HOST_CTL, val | HOST_CTL_AHCI_EN | HOST_CTL_IRQ_EN);
 
+    // 设置IRQ处理函数
     PCIe::SetInterruptHandler(device,&ahci_isr_handler);
 
     // 获取信息
     ctrl->caps = ahci_ctrl_readl(ctrl, HOST_CAP);
     ctrl->ports = ahci_ctrl_readl(ctrl, HOST_PORTS_IMPL);
 
-	klog_info("AHCI","ports=%X iobase=%X",(uint64)ctrl->ports,ctrl->iobase);
+	klog_debug("AHCI","ports=%X iobase=%X",(uint64)ctrl->ports,ctrl->iobase);
 
     // 遍历所有port
 	max = 0x1f;
@@ -789,28 +696,23 @@ void AhciDeviceDriver::ScanDevice(const PCIe::Device& device) {
         port = ahci_port_alloc(ctrl, pnr);
         if (port == nullptr)
             continue;
-        // run_thread(ahci_port_detect, port);
 		
     	int rc;
 
 		ahci_port_reset(port->ctrl, port->pnr);
-
 		rc = ahci_port_setup(port);
+        
 		klog_info("AHCI","Init port: ctrl=%X list=%X cmd=%X fis=%X pnr=%d, isr=%d, rc=%d",port->ctrl,MemoryManager::KernelToPhysPtr(port->list),MemoryManager::KernelToPhysPtr(port->cmd),MemoryManager::KernelToPhysPtr(port->fis),port->pnr,(uint32)ctrl->irq,(rc < 0) ? -rc : rc);
-		if (rc < 0)
+		
+        if (rc < 0)
 			ahci_port_release(port);
 		else {
 			port = ahci_port_realloc(port);
 			if (port == nullptr)
 				continue;
 			
-			klog_info("AHCI", "Register AHCI/%d", port->pnr);
-
-			// if(!port->atapi) {
-				this->RegisterDrive(&port->drive);
-			// } else {
-				// this->RegisterDrive(&port->drive);
-			//}
+			klog_info("AHCI", "Register AHCI/%d", port->pnr);		
+            this->RegisterDrive(&port->drive);
 		}
     }
 }

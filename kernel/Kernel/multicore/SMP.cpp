@@ -38,7 +38,9 @@ namespace SMP {
         IDT::InitCore(logicalID);
         APIC::InitCore();
         SyscallHandler::InitCore();
-        SSE::InitCore();
+
+        // TODO: Bug 多核情况下，启用SSE导致内存页出现错误
+        // SSE::InitCore();
         
         started = true;
 
@@ -49,8 +51,6 @@ namespace SMP {
         
         Scheduler::ThreadUnsetSticky();
         Scheduler::ThreadEnableInterrupts();
-
-        klog_info_isr("SMP", "Start Core OK !!!");
 
         while(true)
             __asm__ __volatile__("hlt");
@@ -129,7 +129,7 @@ namespace SMP {
 
         uint64 bootAPIC = APIC::GetID();
 
-        for(uint64 i = 1; i < g_NumCores; i++) {
+        for(uint64 i = 0; i < g_NumCores; i++) {
             if(g_Info[i].apicID == bootAPIC)
                 continue;
 

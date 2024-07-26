@@ -2,11 +2,10 @@
 
 GLOBAL smp_Start
 smp_Start:
-    nop
 GLOBAL smp_Trampoline
 smp_Trampoline:
         cli
-        
+                
         mov ax, cs
         mov ds, ax
         mov es, ax

@@ -42,15 +42,15 @@ struct chs_s {
 struct drive_s {
     uint8 type;            // Driver type (DTYPE_*)
     char name[10];
-    uint8 floppy_type;     // Type of floppy (only for floppy drives).
-    struct chs_s lchs;  // Logical CHS
-    uint64 sectors;        // Total sectors count
+    
     uint32 cntl_id;        // Unique id for a given driver type.
     uint8 removable;       // Is media removable (currently unused)
 
-    // Info for EDD calls
-    uint8 translation;     // type of translation
+    uint64 sectors;        // Total sectors count
     uint16 blksize;        // block size
+
+    struct chs_s lchs;  // Logical CHS
+    
     struct chs_s pchs;  // Physical CHS
     uint32 max_segment_size; //max_segment_size
     uint32 max_segments;   //max_segments
