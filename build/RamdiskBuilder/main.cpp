@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     std::string outFile = argv[1];
 
     system(("dd if=/dev/zero of=" + outFile + " bs=512 count=20000 2> /dev/null").c_str());
-    system(("mkfs.ext2 " + outFile + " -L SimpleOS2 > /dev/null 2>&1").c_str());
+    system(("mkfs.ext2 " + outFile + " -L ChenixOS > /dev/null 2>&1").c_str());
 
     system(("echo >> " + outFile + ".cmd").c_str());
 

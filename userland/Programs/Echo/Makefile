@@ -19,4 +19,4 @@ endif
 out_file := echo
 
 
-include $(build_dir)/makeinclude/cpp.mk
+include $(build_dir)/makefile/cpp.mk

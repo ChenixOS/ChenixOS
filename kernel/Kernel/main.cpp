@@ -202,7 +202,7 @@ extern "C" void __attribute__((noreturn)) main(KernelHeader* info) {
     Terminal::InitTerminalInfo(&g_TerminalInfo, info->screenBuffer, info->screenWidth, info->screenHeight, info->screenScanlineWidth, info->screenColorsInverted);
     Terminal::Clear(&g_TerminalInfo);
 
-    kprintf_isr("%CStarting SimpleOS2 Kernel\n", 40, 200, 40);
+    kprintf_isr("%CStarting ChenixOS Kernel\n", 40, 200, 40);
     klog_info_isr("Boot", "Kernel at 0x%016X", info->kernelImage.buffer);
 
     if(!MemoryManager::Init(info))

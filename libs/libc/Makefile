@@ -10,4 +10,4 @@ compile_flags := -g -ffreestanding -fno-stack-protector -fno-exceptions
 
 out_file := libc.a
 
-include $(build_dir)/makeinclude/cpp_static.mk
+include $(build_dir)/makefile/cpp_static.mk

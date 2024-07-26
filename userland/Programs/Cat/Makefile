@@ -18,4 +18,4 @@ endif
 
 out_file := cat
 
-include $(build_dir)/makeinclude/cpp.mk
+include $(build_dir)/makefile/cpp.mk

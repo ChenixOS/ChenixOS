@@ -1,5 +1,5 @@
 # ===========================================
-#        ChenixOS`s Build Tools
+#        $(OS_NAME)`s Build Tools
 # ===========================================
 
 # currently, only Debug and Release have special meaning
@@ -26,22 +26,27 @@ export root_dir := $(shell pwd)
 # This is the main build directory, it should only be changed after "make clean" was called
 export build_dir := $(root_dir)/build
 # OUT-Directory
-export out_dir := $(build_dir)/out/$(CONFIG)
+export out_dir := $(root_dir)/out/$(CONFIG)
 # This is the directory in which all binary files will be stored (should be inside the build_dir folder)
-export bin_dir := $(build_dir)/out/$(CONFIG)/bin
+export bin_dir := $(root_dir)/out/$(CONFIG)/bin
 # This is the directory in which all intermediate files will be stored (should be inside the build_dir folder)
-export int_dir := $(build_dir)/out/$(CONFIG)/int
+export int_dir := $(root_dir)/out/$(CONFIG)/int
 # 引用库目录
 export dep_dir := $(root_dir)/dep
 
+# ===================================================================
+# Main build rules
 
 # Default: build common boot disk image.
 defualt: disk vbox_img qcow2_img finish
 all: disk vbox_img vhd_img vmdk_img qcow_img qcow2_img finish
 
+# ====================================================================
+# 启动脚本
+
 # 启动QEMU
 runqemu: FORCE
-	@ printf "\e[32mStarting SimpleOS2 in Qemu (No-KVM)\e[0m\n"
+	@ printf "\e[32mStarting $(OS_NAME) in Qemu (No-KVM)\e[0m\n"
 	qemu-system-x86_64 -gdb tcp::1234 \
 		-machine q35 \
 		-m 1024 \
@@ -50,11 +55,11 @@ runqemu: FORCE
 		-net none \
 		-drive if=pflash,unit=0,format=raw,file=dep/ovmf/x64/OVMF_CODE.fd,readonly=on \
 		-drive if=pflash,unit=1,format=raw,file=dep/ovmf/x64/OVMF_VARS.fd,readonly=on \
-		-drive if=ide,file=$(out_dir)/SimpleOS2.img,format=raw
+		-drive if=ide,file=$(out_dir)/$(OS_NAME).img,format=raw
 
 # 启动QEMU-KVM
 runkvm: FORCE
-	@ printf "\e[32mStarting SimpleOS2 in Qemu (KVM)\e[0m\n"
+	@ printf "\e[32mStarting $(OS_NAME) in Qemu (KVM)\e[0m\n"
 	qemu-system-x86_64 -enable-kvm \
 		-machine q35 \
 		-m 1024 \
@@ -63,7 +68,10 @@ runkvm: FORCE
 		-net none \
 		-drive if=pflash,unit=0,format=raw,file=dep/ovmf/x64/OVMF_CODE.fd,readonly=on \
 		-drive if=pflash,unit=1,format=raw,file=dep/ovmf/x64/OVMF_VARS.fd,readonly=on \
-		-drive file=$(out_dir)/SimpleOS2.img,format=raw
+		-drive file=$(out_dir)/$(OS_NAME).img,format=raw
+
+# ================================================================
+# Build for kernel and deps
 
 # Build For build-time tools
 rdbuilder: FORCE
@@ -86,12 +94,15 @@ acpica: FORCE
 	@ printf "\e[32mBuilding ACPICA\e[0m\n"
 	@ $(MAKE) -s -C dep/acpica
 
+# ==================================================================
+# Build for userland library And test program 
+
 # Build for userland base library
 libs: FORCE
 	@ $(MAKE) -s libsimpleos2
 	@ $(MAKE) -s libc
 libsimpleos2: FORCE
-	@ printf "\e[32mBuilding LibSimpleOS2\e[0m\n"
+	@ printf "\e[32mBuilding Lib$(OS_NAME)\e[0m\n"
 	@ $(MAKE) -s -C libs/libsimpleos2
 libc: FORCE
 	@ printf "\e[32mBuilding LibC\e[0m\n"
@@ -116,49 +127,58 @@ programs: FORCE
 	@ printf "\e[32mBuilding LibcTest\e[0m\n"
 	@ $(MAKE) -s -C userland/Programs/libctest
 
+# =============================================================================
+# Build for Image
+
 # Build for initrd.img
 initrd: FORCE
 	@ $(MAKE) -s rdbuilder
 	@ $(MAKE) -s libs
 	@ $(MAKE) -s programs
 	@ printf "\e[32mBuilding initrd\e[0m\n"
-	@ $(MAKE) -s -f build/kernel/initrd.mk
+	@ $(MAKE) -s -f build/makefile/initrd.mk
 
 # Build for OS`s Disk Image Or Boot Image
 partition: FORCE
 	@ $(MAKE) -s bootloader
 	@ $(MAKE) -s kernel
 	@ $(MAKE) -s initrd
-	@ printf "\e[32mBuilding SimpleOS2 boot partition\e[0m\n"
-	@ $(MAKE) -s -f build/kernel/partition.mk
+	@ printf "\e[32mBuilding $(OS_NAME) boot partition\e[0m\n"
+	@ $(MAKE) -s -f build/makefile/partition.mk
 
 disk: FORCE
 	@ $(MAKE) -s partition
-	@ printf "\e[32mBuilding SimpleOS2 raw disk image\e[0m\n"
-	@ $(MAKE) -s -f build/kernel/disk.mk
+	@ printf "\e[32mBuilding $(OS_NAME) raw disk image\e[0m\n"
+	@ $(MAKE) -s -f build/makefile/disk.mk
 vbox_img: FORCE disk
-	@ printf "\e[32mBuilding SimpleOS2 VirtualBox disk image\e[0m\n"
-	@ qemu-img convert -f raw -O vdi $(out_dir)/SimpleOS2.img $(out_dir)/SimpleOS2.vdi -p
+	@ printf "\e[32mBuilding $(OS_NAME) VirtualBox disk image\e[0m\n"
+	@ qemu-img convert -f raw -O vdi $(out_dir)/$(OS_NAME).img $(out_dir)/$(OS_NAME).vdi -p
 vmdk_img: FORCE disk
-	@ printf "\e[32mBuilding SimpleOS2 VMWare disk image\e[0m\n"
-	@ qemu-img convert -f raw -O vmdk $(out_dir)/SimpleOS2.img $(out_dir)/SimpleOS2.vmdk -p
+	@ printf "\e[32mBuilding $(OS_NAME) VMWare disk image\e[0m\n"
+	@ qemu-img convert -f raw -O vmdk $(out_dir)/$(OS_NAME).img $(out_dir)/$(OS_NAME).vmdk -p
 vhd_img: FORCE disk
-	@ printf "\e[32mBuilding SimpleOS2 Hyper-V disk image\e[0m\n"
-	@ qemu-img convert -f raw -O vpc $(out_dir)/SimpleOS2.img $(out_dir)/SimpleOS2.vhd -p
+	@ printf "\e[32mBuilding $(OS_NAME) Hyper-V disk image\e[0m\n"
+	@ qemu-img convert -f raw -O vpc $(out_dir)/$(OS_NAME).img $(out_dir)/$(OS_NAME).vhd -p
 qcow_img: FORCE disk
-	@ printf "\e[32mBuilding SimpleOS2 QEMU-COW disk image\e[0m\n"
-	@ qemu-img convert -f raw -O qcow $(out_dir)/SimpleOS2.img $(out_dir)/SimpleOS2.qcow -p
+	@ printf "\e[32mBuilding $(OS_NAME) QEMU-COW disk image\e[0m\n"
+	@ qemu-img convert -f raw -O qcow $(out_dir)/$(OS_NAME).img $(out_dir)/$(OS_NAME).qcow -p
 qcow2_img: FORCE disk
-	@ printf "\e[32mBuilding SimpleOS2 QEMU-COW2 disk image\e[0m\n"
-	@ qemu-img convert -f raw -O qcow2 $(out_dir)/SimpleOS2.img $(out_dir)/SimpleOS2.qcow2 -p
-
-# Clean for project cache
-clean: FORCE
-	@ printf "\e[32mCleaning up\e[0m\n"
-	@ rm -rf $(build_dir)/out
+	@ printf "\e[32mBuilding $(OS_NAME) QEMU-COW2 disk image\e[0m\n"
+	@ qemu-img convert -f raw -O qcow2 $(out_dir)/$(OS_NAME).img $(out_dir)/$(OS_NAME).qcow2 -p
 
 finish: FORCE
 	@ printf "\e[32mBuild finish.\e[0m\n"
-	@ printf "Out Image: $(out_dir)/SimpleOS2.img \n"
+	@ printf "Out Image: $(out_dir)/$(OS_NAME).img \n"
 
+# ===================================================================
+# Clean for project cache
+
+clean: FORCE
+	@ printf "\e[32mCleaning up $(out_dir) \e[0m\n"
+	@ rm -rf $(out_dir)
+cleanall: FORCE
+	@ printf "\e[32mCleaning up all output \e[0m\n"
+	@ rm -rf $(root_dir)/out
+
+# ====================================================================
 FORCE: 
