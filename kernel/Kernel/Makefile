@@ -1,4 +1,4 @@
-include $(build_dir)/makeinclude/base.mk
+include $(build_dir)/makefile/base.mk
 
 # 定义编译目录
 cpp_compiler := $(ELF_GCC)
@@ -36,4 +36,4 @@ compile_flags += $(optimize_flags)
 
 out_file := Kernel.sys
 
-include $(build_dir)/makeinclude/cpp.mk
+include $(build_dir)/makefile/cpp.mk

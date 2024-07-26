@@ -10,7 +10,7 @@
 
 typedef void (*InitFunc)();
 
-constexpr const char* config_HelloMessage = "Welcome to SimpleOS2!";
+constexpr const char* config_HelloMessage = "Welcome to ChenixOS!";
 
 // The device to use for the boot filesystem
 constexpr const char* config_BootFS_DevFile = "/dev/ram0";

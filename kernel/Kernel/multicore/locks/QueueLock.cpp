@@ -2,6 +2,10 @@
 
 #include "task/Scheduler.h"
 
+// 队列锁
+// 通过维护一个等待队列来实现的公平锁
+// 底层原子性基于StickyLock加锁实现
+
 QueueLock::QueueLock()
     : m_Count(1)
 { }
@@ -14,7 +18,7 @@ void QueueLock::Lock() {
     if(m_Count > 0) {
         m_Count--;
         m_Lock.Unlock();
-    } else {
+    } else { // 锁已经被获取则将线程加入到队列中
         Scheduler::ThreadSetSticky();
 
         auto tInfo = Scheduler::GetCurrentThreadInfo();
@@ -36,7 +40,7 @@ void QueueLock::Unlock() {
     if(m_Queue.empty()) {
         m_Count++;
         m_Lock.Unlock();
-    } else {
+    } else { // 退出锁 将下一个线程恢复到状态(既默认获得了锁)
         QueueLockEntry& e = m_Queue.front();
         m_Queue.pop_front();
         e.thread->registers.rax = 0;

@@ -10,4 +10,4 @@ compile_flags := -ffreestanding -fno-stack-protector -fno-exceptions -DACPI_LIBR
 
 out_file := acpica.a
 
-include $(build_dir)/makeinclude/cpp_static.mk
+include $(build_dir)/makefile/cpp_static.mk

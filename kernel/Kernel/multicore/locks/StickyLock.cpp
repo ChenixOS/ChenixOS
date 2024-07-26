@@ -2,6 +2,10 @@
 
 #include "task/Scheduler.h"
 
+// 粘性锁
+// 其实就是SpinLock回旋锁，非公平锁
+// 既SpinLock+线程Yield+ThreadSetSticky的实现
+
 StickyLock::StickyLock()
     : m_Val(0)
 { }
