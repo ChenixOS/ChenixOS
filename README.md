@@ -1,7 +1,9 @@
 ## Chenix OS
 
+*** 中文  |  [English](README-en.md) ***
 
-** 中文  |  [English](README-en.md) **
+[![测试镜像CI](https://github.com/ChenixOS/ChenixOS/actions/workflows/test-image.yml/badge.svg)](https://github.com/ChenixOS/ChenixOS/actions/workflows/test-image.yml)
+
 
 ### 简介
 
@@ -25,6 +27,12 @@ ChenixOS是基于X86-64位架构开发的64位类Unix操作系统，目的是提
 `libs`      提供给用户进行开发使用和编译使用的库
 
 `userland`  用户层的相关程序
+
+### 构建方法
+- 配置Ubuntu环境（可以执行build/toolchain/install-from-apt.sh）
+- 打开命令行，切换到根目录
+- 执行`make`或者`make all`
+- 把out目录下的测试镜像丢到虚拟机中运行 (也可以直接`make runqemu`)
 
 ### 计划表
 
