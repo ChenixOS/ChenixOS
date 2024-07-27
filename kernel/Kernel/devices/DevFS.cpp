@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include "kernel/SymbolTable.h"
+
 struct DevReg {
     const char* name;
     bool blockDev;
@@ -46,6 +48,9 @@ void DevFS::RegisterCharDevice(const char* name, uint64 driverID, uint64 devID) 
 
     g_Lock.Unlock();
 }
+
+EXPORT_CPP_SYMBOL("DevFS::RegisterCharDevice", RegisterCharDevice, DevFS::RegisterCharDevice);
+
 void DevFS::RegisterBlockDevice(const char* name, uint64 driverID, uint64 devID) {
     g_Lock.Spinlock();
 
@@ -61,9 +66,14 @@ void DevFS::RegisterBlockDevice(const char* name, uint64 driverID, uint64 devID)
 
     g_Lock.Unlock();
 }
+
+EXPORT_CPP_SYMBOL("DevFS::RegisterBlockDevice", RegisterBlockDevice, DevFS::RegisterBlockDevice);
+
 void DevFS::UnregisterDevice(uint64 driverID, uint64 devID) {
     
 }
+
+EXPORT_CPP_SYMBOL("DevFS::UnregisterDevice", UnregisterDevice, DevFS::UnregisterDevice);
 
 DevFS::DevFS() {
     g_CurrentDir = VFS::Directory::Create(30);

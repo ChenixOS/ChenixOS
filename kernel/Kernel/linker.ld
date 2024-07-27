@@ -22,6 +22,10 @@ SECTIONS
         __PER_CPU_START = . ;
         *(.kpercpu)
         __PER_CPU_END = . ;
+
+        SYMBOL_TABLE_START = .;
+        *(.symbol_table)
+        SYMBOL_TABLE_END = .;
     }
 
     .init_array :

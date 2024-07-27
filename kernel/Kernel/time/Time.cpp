@@ -8,6 +8,8 @@
 
 #include "syscalls/SyscallDefine.h"
 
+#include "kernel/SymbolTable.h"
+
 namespace Time {
 
     static uint64 g_TSCTicksPerMilli;
@@ -85,6 +87,8 @@ namespace Time {
         return g_TSCTicksPerMilli;
     }
 
+    EXPORT_SYMBOL("Time::GetTSCTicksPerMilli", GetTSCTicksPerMilli);
+
     uint64 GetTSC() {
         uint64 edx, eax;
         __asm__ __volatile__ (
@@ -93,6 +97,8 @@ namespace Time {
         );
         return ((edx << 32) & 0xFFFFFFFF00000000) | (eax & 0xFFFFFFFF);
     }
+
+    EXPORT_SYMBOL("Time::GetTSC", GetTSC);
 
     // ==================================================
     // 下面是RTC的实现代码
@@ -217,6 +223,8 @@ namespace Time {
         
         return Date2timeStamp(t.fullYear,t.month,t.dayOfMonth,t.hours,t.minutes,t.seconds);
     }
+
+    EXPORT_SYMBOL("Time::GetCurTimestamp", GetCurTimestamp);
 
     SYSCALL_DEFINE0(syscall_gettime) {
         return GetCurTimestamp();
