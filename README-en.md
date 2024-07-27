@@ -1,6 +1,7 @@
 ## Chenix OS
 
 ** [中文](README.md)  |  English **
+[![Kernel Test Image CI](https://github.com/ChenixOS/ChenixOS/actions/workflows/test-image.yml/badge.svg)](https://github.com/ChenixOS/ChenixOS/actions/workflows/test-image.yml)
 
 ### Introduction
 
