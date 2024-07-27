@@ -138,6 +138,7 @@ static int64 InitThread(uint64, uint64) {
     CallInitFuncs(INIT_STAGE_DEVDRIVERS);
     CallInitFuncs(INIT_STAGE_FSDRIVERS);
     CallInitFuncs(INIT_STAGE_EXECHANDLERS);
+    CallInitFuncs(INIT_STAGE_BUSDRIVERS);
 
     klog_info("Boot", "All Init function finish.");
 
@@ -177,8 +178,7 @@ static int64 InitThread(uint64, uint64) {
         return 1;
     }
     
-    CallInitFuncs(INIT_STAGE_BUSDRIVERS);
-    CallInitFuncs(INIT_STAGE_BUSSCANNER);
+    CallInitFuncs(INIT_STAGE_BUSPROBE);
 
     uint64 tid = Scheduler::CreateKernelThread(SetupInitProcess);
     // Scheduler::CreateKernelThread(SpamThread);

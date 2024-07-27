@@ -1,4 +1,4 @@
-#include "PCIe.h"
+#include "PCI.h"
 #include "acpi/ACPI.h"
 #include "memory/MemoryManager.h"
 
@@ -13,7 +13,7 @@
 
 #include "impl/pcireg.h"
 
-namespace PCIe {
+namespace PCI {
 
     struct Group {
         uint16 id;
@@ -146,7 +146,7 @@ namespace PCIe {
             }
         }   
 
-        // klog_info("PCIe", "Found device: class=%02X:%02X:%02X, loc=%i:%i:%i:%i", dev.classCode, dev.subclassCode, dev.progIf, dev.group, dev.bus, dev.device, dev.function);
+        klog_info("PCI", "Found device: class=%02X:%02X:%02X, loc=%i:%i:%i:%i", dev.classCode, dev.subclassCode, dev.progIf, dev.group, dev.bus, dev.device, dev.function);
         g_Devices.push_back(dev);
 
         return true;
@@ -189,8 +189,7 @@ namespace PCIe {
         return nullptr;
     }
 
-    void ProbeDevices() {
-        
+    void ScanDevices() {
         // Detecting for PCI-E by ACPI`s MCFG tables
         auto mcfg = ACPI::GetMCFG();
         if(mcfg) {
@@ -204,12 +203,15 @@ namespace PCIe {
 
                 g_Groups.push_back(group);
 
-                klog_info("PCIe", "Group: %016X %02X %02X %04X", group.baseAddr, group.busStart, group.busEnd, group.id);
+                klog_info("PCI", "Group: %016X %02X %02X %04X", group.baseAddr, group.busStart, group.busEnd, group.id);
 
                 CheckGroup(group);
             }
         }
+    }
+    REGISTER_INIT_FUNC(ScanDevices, INIT_STAGE_DEVDRIVERS);
 
+    void ProbeDevices() {
         for(const Device& dev : g_Devices) {
             auto factory = FindDriver(dev);
             if(factory != nullptr)
@@ -217,7 +219,7 @@ namespace PCIe {
         }
     }
 
-    REGISTER_INIT_FUNC(ProbeDevices,INIT_STAGE_BUSSCANNER);
+    REGISTER_INIT_FUNC(ProbeDevices,INIT_STAGE_BUSPROBE);
 
     static void SetMSI(const Device& dev, uint8 apicID, IDT::ISR handler) {
         uint8 vect = g_VectCounter;
@@ -247,7 +249,7 @@ namespace PCIe {
 
         IDT::SetInternalISR(vect, handler);
 
-        klog_info("PCIe", "Allocated interrupt %i for device %i:%i:%i:%i", vect, dev.group, dev.bus, dev.device, dev.function);
+        klog_info("PCI", "Allocated interrupt %i for device %i:%i:%i:%i", vect, dev.group, dev.bus, dev.device, dev.function);
     }
 
     void RegisterDriver(const DriverInfo& info, PCIDriverFactory factory) {
@@ -261,7 +263,7 @@ namespace PCIe {
             uint8 pin = ReadConfigByte(dev, 0x3D);
             ACPI::AcpiIRQInfo irqInfo;
             if(!ACPI::GetPCIDeviceIRQ(dev.device, pin, irqInfo)) {
-                klog_error("PCIe", "Could not find interrupt associated with device %04X:%02X:%02X:%02X", dev.group, dev.bus, dev.device, dev.function);
+                klog_error("PCI", "Could not find interrupt associated with device %04X:%02X:%02X:%02X", dev.group, dev.bus, dev.device, dev.function);
             }
 
             if(irqInfo.isGSI)
@@ -369,6 +371,16 @@ namespace PCIe {
         if(id >= dev.numBARs)
             return nullptr; /* 超过将会返回null */
         return (void*) MemoryManager::PhysToKernelPtr((const void*) dev.BARs[id]);
+    }
+
+
+    // Find Device
+    const PCI::Device* GetDeviceByInfo(uint16 group,uint16 bus,uint16 deviceId,uint16 function) {
+        for(auto &device : g_Devices) {
+            if(group == device.group && bus == device.bus && deviceId == device.device && function == device.function)
+                return &device;
+        }
+        return nullptr;
     }
 
 };

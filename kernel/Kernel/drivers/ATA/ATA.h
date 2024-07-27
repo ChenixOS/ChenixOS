@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include "drivers/DiskDeviceDriver/DiskDeviceDriver.h"
-#include "drivers/PCIe/PCIe.h"
+#include "drivers/PCI/PCI.h"
 
 struct ata_channel_s {
     uint16 iobase1;
@@ -12,7 +12,7 @@ struct ata_channel_s {
     uint8  chanid;
     uint8  ataid;
     int pci_bdf;
-    const PCIe::Device* pci_tmp;
+    const PCI::Device* pci_tmp;
 };
 
 struct atadrive_s {

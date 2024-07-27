@@ -15,6 +15,7 @@ extern "C" {
 #include "arch/Port.h"
 #include "arch/APIC.h"
 #include "arch/IOAPIC.h"
+#include "drivers/PCI/PCI.h"
 
 extern uint64 g_ACPILogFile;
 
@@ -265,29 +266,53 @@ extern "C" {
     // TODO: Support to ACPICA`s PCI configuration
 
     ACPI_STATUS AcpiOsReadPciConfiguration(ACPI_PCI_ID* pciID, UINT32 reg, UINT64* val, UINT32 width) {
-        switch(width) {
-        /*case 8:  *val = PCI::ReadConfigByte(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg); break;
+        /*switch(width) {
+        case 8:  *val = PCI::ReadConfigByte(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg); break;
         case 16: *val = PCI::ReadConfigWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg); break;
         case 32: *val = PCI::ReadConfigDWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg); break;
-        case 64: *val = PCI::ReadConfigQWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg); break;*/
+        case 64: *val = PCI::ReadConfigQWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg); break;
         default: return AE_NOT_IMPLEMENTED;
-        }
+        }*/
 
-        return AE_OK;
+        const PCI::Device* device = PCI::GetDeviceByInfo(pciID->Segment,pciID->Bus,pciID->Device,pciID->Function);
+        if(device == nullptr) {
+            AcpiOsPrintf("ACPI Error: Read config not found, seg=%d bus=%d device=%d function=%d reg=%d width=%d \n",pciID->Segment,pciID->Bus,pciID->Device,pciID->Function,reg,width);
+            return AE_NOT_FOUND;
+        }
+        AcpiOsPrintf("ACPI Log: Read config OK, seg=%d bus=%d device=%d function=%d reg=%d width=%d \n",pciID->Segment,pciID->Bus,pciID->Device,pciID->Function,reg,width);
+        switch (width)
+        {
+            case 8: *val = PCI::ReadConfigByte(*device,reg); return AE_OK;
+            case 16: *val = PCI::ReadConfigWord(*device,reg); return AE_OK;
+            case 32: *val = PCI::ReadConfigDWord(*device,reg); return AE_OK;
+            case 64: *val = PCI::ReadConfigQWord(*device,reg); return AE_OK;
+        }
+        return AE_NOT_IMPLEMENTED;
     }
 
     ACPI_STATUS AcpiOsWritePciConfiguration(ACPI_PCI_ID* pciID, UINT32 reg, UINT64 val, UINT32 width) {
-        switch(width) {
-        /*case 8: PCI::WriteConfigByte(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg, val); break;
+        /*switch(width) {
+        case 8: PCI::WriteConfigByte(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg, val); break;
         case 16: PCI::WriteConfigWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg, val); break;
         case 32: PCI::WriteConfigDWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg, val); break;
-        case 64: PCI::WriteConfigQWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg, val); break;*/
+        case 64: PCI::WriteConfigQWord(pciID->Segment, pciID->Bus, pciID->Device, pciID->Function, reg, val); break;
         default: return AE_NOT_IMPLEMENTED;
+        }*/
+
+       const PCI::Device* device = PCI::GetDeviceByInfo(pciID->Segment,pciID->Bus,pciID->Device,pciID->Function);
+        if(device == nullptr) {
+            AcpiOsPrintf("ACPI Error: Write config not found, seg=%d bus=%d device=%d function=%d reg=%d width=%d \n",pciID->Segment,pciID->Bus,pciID->Device,pciID->Function,reg,width);
+            return AE_NOT_FOUND;
         }
-
-        
-
-        return AE_OK;
+        AcpiOsPrintf("ACPI Log: Write config OK, seg=%d bus=%d device=%d function=%d reg=%d width=%d \n",pciID->Segment,pciID->Bus,pciID->Device,pciID->Function,reg,width);
+        switch (width)
+        {
+            case 8: PCI::WriteConfigByte(*device,reg,val); return AE_OK;
+            case 16: PCI::WriteConfigWord(*device,reg,val); return AE_OK;
+            case 32: PCI::WriteConfigDWord(*device,reg,val); return AE_OK;
+            case 64: PCI::WriteConfigQWord(*device,reg,val); return AE_OK;
+        }
+        return AE_NOT_IMPLEMENTED;
     }
 
     void ACPI_INTERNAL_VAR_XFACE AcpiOsPrintf(const char* fmt, ...) {

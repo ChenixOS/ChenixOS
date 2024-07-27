@@ -9,13 +9,13 @@
 #define PCIE_DEFAULT_DEVICEID 0xFFFF
 #define PCIE_DEFAULT_CLASSCODE 0xFF
 
-namespace PCIe {
+namespace PCI {
 
     struct Device {
         uint16 group;
-        uint8 bus;
-        uint8 device;
-        uint8 function;
+        uint16 bus;
+        uint16 device;
+        uint16 function;
 
         uint16 vendorID;
         uint16 deviceID;
@@ -62,4 +62,5 @@ namespace PCIe {
 
     void* GetBARAddress(const Device& dev,uint8 id);
 
+    const PCI::Device* GetDeviceByInfo(uint16 group,uint16 bus,uint16 deviceId,uint16 function);
 }

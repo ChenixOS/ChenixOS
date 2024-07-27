@@ -4,7 +4,7 @@
 #include "memory/MemoryManager.h"
 
 #include "drivers/DiskDeviceDriver/DiskDeviceDriver.h"
-#include "drivers/PCIe/PCIe.h"
+#include "drivers/PCI/PCI.h"
 
 struct sata_cmd_fis {
     uint8 reg;
@@ -32,7 +32,7 @@ struct sata_cmd_fis {
 
 struct ahci_ctrl_s {
     // struct pci_device *pci_tmp;
-	const PCIe::Device* pci_tmp;
+	const PCI::Device* pci_tmp;
     uint8  irq;
     void *iobase;
     uint32 caps;
@@ -216,7 +216,7 @@ public:
     void DriveWriteData(struct drive_s* drive,uint64 startBlock,uint64 numBlocks,void* buffer, Atomic<uint64>* finishFlag, Atomic<uint64>* successFlag);
     int64 DriveIoctl(struct drive_s* drive,int64 cmd,void* buffer);
 
-	void ScanDevice(const PCIe::Device& device);
+	void ScanDevice(const PCI::Device& device);
 };
 
 

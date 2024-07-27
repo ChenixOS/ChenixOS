@@ -210,7 +210,7 @@ namespace ACPI {
         void* retVal;
         ACPI_STATUS err = AcpiGetDevices(nullptr, SearchPCIRootBridge, nullptr, &retVal);
         if(err != -1) {
-            klog_error("ACPI", "Failed to find PCIe Root Bridge: %i", err);
+            klog_error("ACPI", "Failed to find PCI Root Bridge: %i", err);
             return nullptr;
         }
 

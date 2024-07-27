@@ -1,5 +1,5 @@
 #include "init/Init.h"
-#include "drivers/PCIe/PCIe.h"
+#include "drivers/PCI/PCI.h"
 #include "AHCI.h"
 #include "devices/DevFS.h"
 
@@ -15,7 +15,7 @@
 #include "impl/seabios.h"
 #include "impl/pcireg.h"
 
-static const PCIe::DriverInfo devInfo = {
+static const PCI::DriverInfo devInfo = {
     .vendorID = PCIE_DEFAULT_VENDORID,
     .deviceID = PCIE_DEFAULT_DEVICEID,
     .classCode = 0x1,
@@ -26,7 +26,7 @@ static const PCIe::DriverInfo devInfo = {
 static AhciDeviceDriver* g_AhciDevice = nullptr;
 static void* bounce_buf_fl;
 
-void AHCI_Handler(const PCIe::Device& device) {
+void AHCI_Handler(const PCI::Device& device) {
 	if(g_AhciDevice == nullptr) {
 		g_AhciDevice = new AhciDeviceDriver();
 	}
@@ -36,7 +36,7 @@ void AHCI_Handler(const PCIe::Device& device) {
 }
 
 void AHCI_Registers() {
-    PCIe::RegisterDriver(devInfo,AHCI_Handler);
+    PCI::RegisterDriver(devInfo,AHCI_Handler);
 }
 REGISTER_INIT_FUNC(AHCI_Registers,INIT_STAGE_BUSDRIVERS);
 
@@ -81,13 +81,13 @@ static inline uint8 readb(const void *addr) {
 
 // 这是是跟PCI有关的
 static uint32 ahci_ctrl_readl(struct ahci_ctrl_s *ctrl, uint32 reg) {
-	// return PCIe::ReadConfigDWord(*ctrl->pci_tmp, reg);
+	// return PCI::ReadConfigDWord(*ctrl->pci_tmp, reg);
     barrier();
 	return readl(ctrl->iobase + reg);
 }
 
 static void ahci_ctrl_writel(struct ahci_ctrl_s *ctrl, uint32 reg, uint32 val) {
-	// PCIe::WriteConfigDWord(*ctrl->pci_tmp, reg, val);
+	// PCI::WriteConfigDWord(*ctrl->pci_tmp, reg, val);
 	writel(ctrl->iobase + reg, val);
 }
 
@@ -637,19 +637,19 @@ int64 AhciDeviceDriver::DriveIoctl(struct drive_s* drive,int64 cmd,void* buffer)
 }
 
 // 扫描AHCI协议
-void AhciDeviceDriver::ScanDevice(const PCIe::Device& device) {
+void AhciDeviceDriver::ScanDevice(const PCI::Device& device) {
 	struct ahci_port_s *port;
     uint32 val, pnr, max;
 	
 	// Io Base
-	void* iobase = PCIe::GetBARAddress(device, 5);
-	PCIe::EnableMemoryMaster(device);
+	void* iobase = PCI::GetBARAddress(device, 5);
+	PCI::EnableMemoryMaster(device);
 
 	struct ahci_ctrl_s *ctrl = new ahci_ctrl_s();
 	ctrl->pci_tmp = &device;
 	ctrl->iobase = iobase;
-	ctrl->irq = PCIe::ReadConfigByte(device,PCI_INTERRUPT_LINE);
-	PCIe::EnableBusMaster(device);
+	ctrl->irq = PCI::ReadConfigByte(device,PCI_INTERRUPT_LINE);
+	PCI::EnableBusMaster(device);
 
     g_ahciBaseCtrl = ctrl;
 
@@ -679,7 +679,7 @@ void AhciDeviceDriver::ScanDevice(const PCIe::Device& device) {
     ahci_ctrl_writel(ctrl, HOST_CTL, val | HOST_CTL_AHCI_EN | HOST_CTL_IRQ_EN);
 
     // 设置IRQ处理函数
-    PCIe::SetInterruptHandler(device,&ahci_isr_handler);
+    PCI::SetInterruptHandler(device,&ahci_isr_handler);
 
     // 获取信息
     ctrl->caps = ahci_ctrl_readl(ctrl, HOST_CAP);
