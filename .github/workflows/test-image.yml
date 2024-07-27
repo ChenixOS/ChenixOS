@@ -14,6 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: configure
-      run: ./build/toolchain/install-from-apt.sh
+      run: chmod a+rx ./build/toolchain/install-from-apt.sh && ./build/toolchain/install-from-apt.sh
     - name: make
       run: make all
