@@ -3,9 +3,8 @@
 #include <stdint.h>
 
 struct disk_op_s {
-    void *buf_fl;
-    struct drive_s *drive_fl;
-    uint8 command;
+    void *buf_fl; // buffer
+    struct drive_s *drive_fl; // 指向设备方便管理
     uint16 count;
     union {
         // Commands: READ, WRITE, VERIFY, SEEK, FORMAT
@@ -166,4 +165,15 @@ inline void MakeDiskName(char* out,uint8 type,uint8 count,uint8 vcount) {
     }
 
     out[i++] = 0;
+}
+
+static inline void make_disk_op(struct drive_s* driver,
+    struct disk_op_s* op,
+    uint64 startBlock,
+    uint16 numBlock,
+    void* buffer) {
+    op->buf_fl = buffer;
+    op->blocksize = driver->blksize;
+    op->lba = startBlock;
+    op->count = numBlock;
 }

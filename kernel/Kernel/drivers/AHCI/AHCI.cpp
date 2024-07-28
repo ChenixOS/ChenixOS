@@ -214,8 +214,6 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
     struct ahci_list_s *list = port_gf->list;
     uint32 pnr                  = port_gf->pnr;
 
-    klog_debug("AHCI","buffer=%X phys=%X",buffer,MemoryManager::KernelToPhysPtr(buffer));
-
     cmd->fis.reg       = 0x27;
     cmd->fis.pmp_type  = 1 << 7; /* cmd fis */
     // cmd->prdt[0].base  = (uint32)MemoryManager::KernelTo32PhysPtr(buffer);
@@ -233,7 +231,6 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
     // list[0].baseu  = 0;
     MemoryManager::SplitKernelToPhysPtr(cmd,&list[0].baseu,&list[0].base);
 
-	klog_debug("AHCI", "AHCI/%d: send cmd ...", pnr);
     intbits = ahci_port_readl(ctrl, pnr, PORT_IRQ_STAT);
     if (intbits)
         ahci_port_writel(ctrl, pnr, PORT_IRQ_STAT, intbits);
@@ -268,23 +265,13 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
 			}
             Scheduler::Yield();
         }
-        klog_debug("AHCI", "AHCI/%d: ... intbits 0x%x, status 0x%x ...",
-                pnr, intbits, status);
     } while (status & ATA_CB_STAT_BSY);
 
 	success = (0x00 == (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_DF |
                                   ATA_CB_STAT_ERR)) &&
                ATA_CB_STAT_RDY == (status & (ATA_CB_STAT_RDY)));
     
-    klog_info("AHCI","error=%X", error);
-
-	if (success) {
-        klog_debug("AHCI", "AHCI/%d: ... finished, status 0x%x, OK", pnr,
-                status);
-    } else {
-        klog_debug("AHCI", "AHCI/%d: ... finished, status 0x%x, ERROR 0x%x", pnr,
-                status, error);
-
+	if (!success) { // 失败则清理port的flags并重置
         ahci_port_clear(ctrl, pnr);
     }
     return success ? 0 : -DISK_RET_ECONTROLLER;
@@ -615,9 +602,35 @@ void ahci_isr_handler(IDT::Registers *regs) {
     }
 }
 
+/**
+ * @brief 读写代码
+ * 
+ * @param drive 设备结构
+ * @param op 操作缓冲区
+ * @param iswrite 读/写
+ * @return int 是否成功(0 成功 DISK_REY_EBADTRACK 失败)
+ */
+// read/write count blocks from a harddrive, op->buf_fl must be word aligned
+static int
+ahci_disk_readwrite_aligned(struct drive_s* drive,struct disk_op_s *op, int iswrite)
+{
+    struct ahci_port_s *port_gf = (struct ahci_port_s*) drive;
+    struct ahci_cmd_s *cmd = port_gf->cmd;
+    int rc;
+
+    sata_prep_readwrite(&cmd->fis, op, iswrite);
+    rc = ahci_command(port_gf, iswrite, 0, op->buf_fl,
+                      op->count * DISK_SECTOR_SIZE);
+    if (rc < 0)
+        return DISK_RET_EBADTRACK;
+    return DISK_RET_SUCCESS;
+}
+
 
 // ===========================================================================
 // 驱动代码
+
+static QueueLock g_AhciQueueLock;
 
 AhciDeviceDriver::AhciDeviceDriver()
 : DiskDeviceDriver("ahci") {
@@ -625,11 +638,49 @@ AhciDeviceDriver::AhciDeviceDriver()
 }
 
 void AhciDeviceDriver::DriveReadData(struct drive_s* drive,uint64 startBlock,uint64 numBlocks,void* buffer, Atomic<uint64>* finishFlag, Atomic<uint64>* successFlag) {
+    bool success = false;
+    struct disk_op_s op;
+    uint64 size = numBlocks * drive->blksize;
+    void* align_buffer = KernelHeap::AllocAlignMemory(size);
+    int i;
+
+    g_AhciQueueLock.Lock();
+
+    make_disk_op(drive, &op, startBlock, numBlocks, align_buffer);
+    i = ahci_disk_readwrite_aligned(drive, &op, 0);
+
+    g_AhciQueueLock.Unlock();
+
+    KernelHeap::FreeAlignMemory(align_buffer, size);
+
+    success = (i == DISK_RET_SUCCESS);
+    if(success)
+        kmemcpy(buffer, align_buffer, size);
     finishFlag->Write(1);
+    successFlag->Write(success);
 }
 
 void AhciDeviceDriver::DriveWriteData(struct drive_s* drive,uint64 startBlock,uint64 numBlocks,void* buffer, Atomic<uint64>* finishFlag, Atomic<uint64>* successFlag) {
+    bool success = false;
+    struct disk_op_s op;
+    uint64 size = numBlocks * drive->blksize;
+    void* align_buffer = KernelHeap::AllocAlignMemory(size);
+    int i;
+
+    kmemcpy(align_buffer, buffer, size);
+
+    g_AhciQueueLock.Lock();
+
+    make_disk_op(drive, &op, startBlock, numBlocks, align_buffer);
+    i = ahci_disk_readwrite_aligned(drive, &op, 1);
+
+    g_AhciQueueLock.Unlock();
+
+    KernelHeap::FreeAlignMemory(align_buffer, size);
+
+    success = (i == DISK_RET_SUCCESS);
     finishFlag->Write(1);
+    successFlag->Write(success);
 }
 
 int64 AhciDeviceDriver::DriveIoctl(struct drive_s* drive,int64 cmd,void* buffer) {

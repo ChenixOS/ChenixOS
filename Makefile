@@ -6,6 +6,7 @@
 # the configuration is best changed by invoking make with "config=Release"
 export CONFIG ?= Debug
 export ARCH ?= x86_64
+export CROSS_COMPILE ?= 
 
 export OS_NAME := ChenixOS
 export VERSION := 1.0
@@ -13,7 +14,7 @@ export BUILD_DATE := $(shell date -R)
 
 # Build enviroment
 export PE_GCC := x86_64-w64-mingw32-gcc
-export ELF_GCC := gcc
+export ELF_GCC := $(CROSS_COMPILE)gcc
 export NASM := nasm
 export MTOOLS_MMD := mmd
 export MTOOLS_MCOPY := mcopy
@@ -30,7 +31,7 @@ export out_dir := $(root_dir)/out/$(CONFIG)
 # This is the directory in which all binary files will be stored (should be inside the build_dir folder)
 export bin_dir := $(root_dir)/out/$(CONFIG)/bin
 # This is the directory in which all intermediate files will be stored (should be inside the build_dir folder)
-export int_dir := $(root_dir)/out/$(CONFIG)/int
+export int_dir := $(root_dir)/out/$(CONFIG)/obj
 # 引用库目录
 export dep_dir := $(root_dir)/dep
 
@@ -38,8 +39,8 @@ export dep_dir := $(root_dir)/dep
 # Main build rules
 
 # Default: build common boot disk image.
-defualt: disk vbox_img qcow2_img finish
-all: disk vbox_img vhd_img vmdk_img qcow_img qcow2_img finish
+defualt: printvar disk vbox_img qcow2_img finish
+all: printvar disk vbox_img vhd_img vmdk_img qcow_img qcow2_img finish
 
 # ====================================================================
 # 启动脚本
@@ -166,12 +167,27 @@ qcow2_img: FORCE disk
 	@ printf "\e[32mBuilding $(OS_NAME) QEMU-COW2 disk image\e[0m\n"
 	@ qemu-img convert -f raw -O qcow2 $(out_dir)/$(OS_NAME).img $(out_dir)/$(OS_NAME).qcow2 -p
 
-finish: FORCE
-	@ printf "\e[32mBuild finish.\e[0m\n"
-	@ printf "Out Image: $(out_dir)/$(OS_NAME).img \n"
-
 # ===================================================================
-# Clean for project cache
+
+printvar: FORCE
+	@ printf "================================================== \n"
+	@ printf "  Build Host: $(shell uname -snr) \n"
+	@ printf "  Build Date: $(shell date -R) \n"
+	@ printf "  Target Arch: $(ARCH) \n"
+	@ printf "  Target Config: $(CONFIG) \n"
+	@ printf "  Project Dir: $(root_dir) \n"
+	@ printf "  Output Dir: $(out_dir) \n"
+	@ printf "  CROSS_COMPILE: $(CROSS_COMPILE) \n"
+	@ printf "================================================== \n"
+	@ printf "\e[32mBuild confingured !!! \e[0m \n \n"
+
+finish: FORCE
+	@ printf "==================================================== \n"
+	@ printf "Output Detail: \n"
+	@ printf " Output Dir: $(out_dir) \n"
+	@ printf " Out Image: $(out_dir)/$(OS_NAME).img \n"
+	@ printf "==================================================== \n"
+	@ printf "\e[32mBuild finish.\e[0m\n"
 
 clean: FORCE
 	@ printf "\e[32mCleaning up $(out_dir) \e[0m\n"

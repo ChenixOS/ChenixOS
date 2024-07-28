@@ -16,4 +16,14 @@ jobs:
     - name: configure
       run: chmod a+rx ./build/toolchain/install-from-apt.sh && ./build/toolchain/install-from-apt.sh
     - name: make
-      run: make all
+      run: ARCH=x86_64 CONFIG=Release make all
+    - name: Upload ISOs
+      uses: actions/upload-artifact@v4
+      with:
+        name: ChenixOS-build-x86_64-${{github.sha}}
+        path: |
+          out/Release/ChenixOS.img
+          out/Release/ChenixOS.vdi
+          out/Release/ChenixOS.vmdk
+          out/Release/bin/Bootloader/BOOTX64.EFI
+          out/Release/bin/Kernel/Kernel.sys

@@ -26,4 +26,14 @@ namespace KernelHeap {
     inline void FreePages(void* ptr,uint32 count = 1) {
         MemoryManager::FreePages(MemoryManager::KernelToPhysPtr(ptr),count);
     }
+
+    inline void* AllocAlignMemory(uint32 size) {
+        uint64 count = (size / 4096) + ((size % 4096) == 0 ? 0 : 1);
+        return MemoryManager::PhysToKernelPtr(MemoryManager::AllocatePages(count));
+    }
+
+    inline void FreeAlignMemory(void* ptr,uint32 size) {
+        uint64 count = (size / 4096) + ((size % 4096) == 0 ? 0 : 1);
+        MemoryManager::FreePages(MemoryManager::KernelToPhysPtr(ptr),count);
+    }
 }
