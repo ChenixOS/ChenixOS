@@ -4,6 +4,9 @@
 
 [![测试镜像CI](https://github.com/ChenixOS/ChenixOS/actions/workflows/test-image.yml/badge.svg)](https://github.com/ChenixOS/ChenixOS/actions/workflows/test-image.yml)
 
+- 官方网站: https://kernel.fan/
+- 中文Issue请提交到：https://gitee.com/chenixos/chenixos
+- 英文Issue请提交到：https://github.com/ChenixOS/ChenixOS
 
 ### 简介
 
@@ -37,11 +40,6 @@ ChenixOS是基于X86-64位架构开发的64位类Unix操作系统，目的是提
 ### 计划表
 
 以下是列入了计划内要实现的功能，同时欢迎大家提Issue和PR！
-
-- 中文Issue请提交到：https://gitee.com/chenixos/chenixos
-- 英文Issue请提交到：https://github.com/ChenixOS/ChenixOS
-- 会中文却非要提交英文的请到：file:///dev/null
-
 
 #### 已支持功能
 
