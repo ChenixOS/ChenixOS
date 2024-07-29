@@ -14,6 +14,8 @@
 
 #include "CpuInfo.h"
 
+#include "time/Time.h"
+
 namespace SMP {
 
     extern "C" int smp_Start;
@@ -132,6 +134,7 @@ namespace SMP {
 
         uint64 bootAPIC = APIC::GetID();
 
+        barrier();
         // 初始化当前CPU的信息
         InitCpuInfo();
 
@@ -154,18 +157,36 @@ namespace SMP {
             Wait(20);
             APIC::SendStartupIPI(g_Info[i].apicID, (uint64)MemoryManager::KernelToPhysPtr(buffer));
 
+            uint64 start = Time::GetTSC();
+
             Wait(1);
 
+            barrier();
             if(!alive) {
                 APIC::SendStartupIPI(g_Info[i].apicID, (uint64)MemoryManager::KernelToPhysPtr(buffer));
                 WaitSecond();
+
+                barrier();
                 if(!alive) {
                     klog_error_isr("SMP", "Core %i failed to start...", i);
                     continue;
                 }
             }
 
-            while(!started) ;   
+            // 等待核心启动完成
+            barrier();
+            while(!started) {
+                barrier();
+                if((Time::GetTSC() - start) / Time::GetTSCTicksPerMilli() > 6 * 1000) {
+                    break; // 超时
+                } 
+            }
+
+            barrier();
+            if(!started) {
+                klog_error_isr("SMP", "Core %i failed to start...", i);
+                continue;
+            } 
 
             g_NumRunningCores++;
             klog_info_isr("SMP", "Logical Core %i started...", i);
