@@ -1,3 +1,13 @@
+/**
+ * @file AHCI.cpp
+ * @author liankong xhsw.new@qq.com
+ * @brief AHCI Controller's simple driver
+ * @version 0.1
+ * @date 2024-08-13
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include "init/Init.h"
 #include "drivers/PCI/PCI.h"
 #include "AHCI.h"
@@ -12,7 +22,7 @@
 #include "task/Scheduler.h"
 #include "drivers/ATA/ATA.h"
 
-#include "impl/seabios.h"
+#include "impl/lowbits.h"
 #include "impl/pcireg.h"
 
 static const PCI::DriverInfo devInfo = {
@@ -20,7 +30,7 @@ static const PCI::DriverInfo devInfo = {
     .deviceID = PCIE_DEFAULT_DEVICEID,
     .classCode = 0x1,
     .subclassCode = 0x6,
-    .progIf = 0x1
+    .progIf = 0x1 // AHCI rev 1
 };
 
 static AhciDeviceDriver* g_AhciDevice = nullptr;

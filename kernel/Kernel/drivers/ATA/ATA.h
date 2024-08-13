@@ -152,3 +152,15 @@ struct atadrive_s {
 #define ATA_TRANSFER_MODE_MULTIWORD_DMA      0x20
 #define ATA_TRANSFER_MODE_PIO_FLOW_CTRL      0x08
 #define ATA_TRANSFER_MODE_DEFAULT_PIO        0x00
+
+
+class IDEDeviceDriver : public DiskDeviceDriver {
+public:
+	IDEDeviceDriver();
+	
+	void DriveReadData(struct drive_s* drive,uint64 startBlock,uint64 numBlocks,void* buffer, Atomic<uint64>* finishFlag, Atomic<uint64>* successFlag);
+    void DriveWriteData(struct drive_s* drive,uint64 startBlock,uint64 numBlocks,void* buffer, Atomic<uint64>* finishFlag, Atomic<uint64>* successFlag);
+    int64 DriveIoctl(struct drive_s* drive,int64 cmd,void* buffer);
+
+	void ScanDevice();
+};

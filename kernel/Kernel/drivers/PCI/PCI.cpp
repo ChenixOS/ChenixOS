@@ -225,6 +225,8 @@ namespace PCI {
         uint8 vect = g_VectCounter;
         g_VectCounter++;
 
+        barrier();
+
         auto msi = (CapMSI*)dev.msi;
         if(msi->control & MSI_CONTROL_64BIT) {
             auto msi64 = (CapMSI64*)msi;
@@ -257,6 +259,8 @@ namespace PCI {
     }
 
     void SetInterruptHandler(const Device& dev, IDT::ISR handler) {
+        barrier();
+
         if(dev.msi != nullptr) {
             SetMSI(dev, APIC::GetID(), handler);
         } else {
@@ -274,6 +278,8 @@ namespace PCI {
     }
 
     uint8 ReadConfigByte(const Device& dev, uint32 reg) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint8* addr = (uint8*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -284,6 +290,8 @@ namespace PCI {
         return 0;
     }
     uint16 ReadConfigWord(const Device& dev, uint32 reg) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint16* addr = (uint16*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -294,6 +302,8 @@ namespace PCI {
         return 0;
     }
     uint32 ReadConfigDWord(const Device& dev, uint32 reg) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint32* addr = (uint32*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -304,6 +314,8 @@ namespace PCI {
         return 0;
     }
     uint64 ReadConfigQWord(const Device& dev, uint32 reg) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint64* addr = (uint64*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -315,6 +327,8 @@ namespace PCI {
     }
 
     void WriteConfigByte(const Device& dev, uint32 reg, uint8 val) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint8* addr = (uint8*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -324,6 +338,8 @@ namespace PCI {
         }
     }
     void WriteConfigWord(const Device& dev, uint32 reg, uint16 val) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint16* addr = (uint16*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -333,6 +349,8 @@ namespace PCI {
         }
     }
     void WriteConfigDWord(const Device& dev, uint32 reg, uint32 val) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint32* addr = (uint32*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -342,6 +360,8 @@ namespace PCI {
         }
     }
     void WriteConfigQWord(const Device& dev, uint32 reg, uint64 val) {
+        barrier();
+
         for(const auto& g : g_Groups) {
             if(g.id == dev.group) {
                 uint64* addr = (uint64*)GetMemBase(g, dev.bus, dev.device, dev.function) + reg;
@@ -368,8 +388,8 @@ namespace PCI {
     }
 
     void* GetBARAddress(const Device& dev,uint8 id) {
-        if(id >= dev.numBARs)
-            return nullptr; /* 超过将会返回null */
+        if(dev.BARs[id] == 0)
+            return nullptr;
         return (void*) MemoryManager::PhysToKernelPtr((const void*) dev.BARs[id]);
     }
 

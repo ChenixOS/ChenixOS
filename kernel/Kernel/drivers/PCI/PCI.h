@@ -64,3 +64,46 @@ namespace PCI {
 
     const PCI::Device* GetDeviceByInfo(uint16 group,uint16 bus,uint16 deviceId,uint16 function);
 }
+
+
+namespace IoBase {
+    static inline uint8 ReadByte(void* iobase,uint32 reg) {
+        barrier();
+        return *((uint8*)iobase + reg);
+    }
+
+    static inline uint16 ReadWord(void* iobase,uint32 reg) {
+        barrier();
+        return *(uint16*)((uint8*)iobase + reg);
+    }
+
+    static inline uint32 ReadDWord(void* iobase,uint32 reg) {
+        barrier();
+        return *(uint32*)((uint8*)iobase + reg);
+    }
+
+    static inline uint64 ReadQWord(void* iobase,uint32 reg) {
+        barrier();
+        return *(uint64*)((uint8*)iobase + reg);
+    }
+
+    static inline void WriteByte(void* iobase,uint32 reg,uint8 val) {
+        barrier();
+        *((uint8*)iobase + reg) = val;
+    }
+
+    static inline void WriteWord(void* iobase,uint32 reg,uint16 val) {
+        barrier();
+        *(uint16*)((uint8*)iobase + reg) = val;
+    }
+
+    static inline void WriteDWord(void* iobase,uint32 reg,uint32 val) {
+        barrier();
+        *(uint32*)((uint8*)iobase + reg) = val;
+    }
+
+    static inline void WriteQWord(void* iobase,uint32 reg,uint64 val) {
+        barrier();
+        *(uint64*)((uint8*)iobase + reg) = val;
+    }
+};

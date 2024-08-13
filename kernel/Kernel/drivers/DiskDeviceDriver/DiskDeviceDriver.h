@@ -6,6 +6,9 @@ struct disk_op_s {
     void *buf_fl; // buffer
     struct drive_s *drive_fl; // 指向设备方便管理
     uint16 count;
+    bool isWrite;
+    volatile bool isSuccess;
+    volatile bool isFinish;
     union {
         // Commands: READ, WRITE, VERIFY, SEEK, FORMAT
         uint64 lba;

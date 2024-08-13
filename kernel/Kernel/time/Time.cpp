@@ -230,5 +230,13 @@ namespace Time {
         return GetCurTimestamp();
     }
 
+    void Delay(uint64 ms) {
+        uint64 start = Time::GetTSC();
+        for(;(Time::GetTSC() - start) / Time::GetTSCTicksPerMilli() < ms;) {
+            barrier();
+        }
+    }
+    EXPORT_SYMBOL("Time::Delay", Delay);
+
 
 }

@@ -21,4 +21,6 @@ namespace Time {
 
     void GetRTC(DateTime* dt);
 
+    void Delay(uint64 ms);
+
 }

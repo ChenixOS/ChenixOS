@@ -51,9 +51,9 @@ struct segoff_s {
 #define __stringify(x)          __stringify_1(x)
 
 
-#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
+#define ALIGN(x,a)              __ALIGN_MASK(x,(a)-1)
 #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-#define ALIGN_DOWN(x,a)         ((x) & ~((typeof(x))(a)-1))
+#define ALIGN_DOWN(x,a)         ((x) & ~((a)-1))
 
 
 #endif /* _SYS_TYPES_H_ */

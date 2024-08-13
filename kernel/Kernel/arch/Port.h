@@ -44,3 +44,56 @@ inline uint32 inl(uint16 port) {
     return Port::InDWord(port);
 }
 
+// 批量写入
+
+static inline void outsb(uint16 port, uint8 *data, uint32 count) {
+    __asm__ __volatile__ (  
+        "rep; outsb"  
+        : "=D" (port), "=S" (data), "=c" (count)  
+        : "0" (port), "1" (data), "2" (count)  
+        : "memory"  
+    );
+}
+static inline void outsw(uint16 port, uint16 *data, uint32 count) {
+    __asm__ __volatile__ (  
+        "rep; outsw"  
+        : "=D" (port), "=S" (data), "=c" (count)  
+        : "0" (port), "1" (data), "2" (count)  
+        : "memory"  
+    );
+}
+static inline void outsl(uint16 port, uint32 *data, uint32 count) {
+    __asm__ __volatile__ (  
+        "rep; outsl"  
+        : "=D" (port), "=S" (data), "=c" (count)  
+        : "0" (port), "1" (data), "2" (count)  
+        : "memory"  
+    );
+}
+
+// 批量读入
+
+static inline void insb(uint16 port, uint8 *data, uint32 count) {
+    __asm__ __volatile__ (  
+        "rep; insb"  
+        : "=S" (data), "=c" (count)
+        : "d" (port), "0" (data), "1" (count)
+        : "memory", "cc"
+    );  
+}
+static inline void insw(uint16 port, uint16 *data, uint32 count) {
+    __asm__ __volatile__ (  
+        "rep; insw"  
+        : "=S" (data), "=c" (count)
+        : "d" (port), "0" (data), "1" (count)
+        : "memory", "cc"
+    );  
+}
+static inline void insl(uint16 port, uint32 *data, uint32 count) {
+    __asm__ __volatile__ (  
+        "rep; insl"  
+        : "=S" (data), "=c" (count)
+        : "d" (port), "0" (data), "1" (count)
+        : "memory", "cc"
+    );  
+}

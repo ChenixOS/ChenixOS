@@ -48,15 +48,15 @@ all: printvar disk vbox_img vhd_img vmdk_img qcow_img qcow2_img finish
 # 启动QEMU
 runqemu: FORCE
 	@ printf "\e[32mStarting $(OS_NAME) in Qemu (No-KVM)\e[0m\n"
-	qemu-system-x86_64 -gdb tcp::1234 \
+	qemu-system-x86_64 \
 		-machine q35 \
 		-m 1024 \
 		-cpu qemu64 \
-		-smp 1 \
+		-smp 2 \
 		-net none \
 		-drive if=pflash,unit=0,format=raw,file=dep/ovmf/x64/OVMF_CODE.fd,readonly=on \
 		-drive if=pflash,unit=1,format=raw,file=dep/ovmf/x64/OVMF_VARS.fd,readonly=on \
-		-drive if=ide,file=$(out_dir)/$(OS_NAME).img,format=raw
+		-drive if=ide,file=$(out_dir)/$(OS_NAME).img,format=raw,index=0,media=disk
 
 # 启动QEMU-KVM
 runkvm: FORCE
@@ -65,7 +65,7 @@ runkvm: FORCE
 		-machine q35 \
 		-m 1024 \
 		-cpu host,+invtsc \
-		-smp 1 \
+		-smp 2 \
 		-net none \
 		-drive if=pflash,unit=0,format=raw,file=dep/ovmf/x64/OVMF_CODE.fd,readonly=on \
 		-drive if=pflash,unit=1,format=raw,file=dep/ovmf/x64/OVMF_VARS.fd,readonly=on \
