@@ -43,3 +43,7 @@ void kprintf_setcolor(uint8 r, uint8 g, uint8 b);
     #define klog_debug(context, format, ...) 
     #define klog_debug_isr(context, format, ...) 
 #endif
+
+// ksprintf.cpp
+int sprintf(char *str, const char *format, ...);
+int snprintf(char *str, size_t size, const char *format, ...);

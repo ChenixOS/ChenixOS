@@ -2,6 +2,7 @@
 #include "KernelHeap.h"
 #include "stdio.h"
 #include "klib/memory.h"
+#include "kernel/SymbolTable.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,10 +11,12 @@ extern "C" {
 void* kmalloc(size_t size) {
     return KernelHeap::Allocate(size);
 }
+EXPORT_DEF_SYMBOL(kmalloc)
 
 void kfree(void* addr) {
     KernelHeap::Free(addr);
 }
+EXPORT_DEF_SYMBOL(kfree)
 
 void* krealloc(void *ptr, size_t size) {
     int bsize = KernelHeap::GetSize(ptr);
@@ -26,6 +29,7 @@ void* krealloc(void *ptr, size_t size) {
 
     return result;
 }
+EXPORT_DEF_SYMBOL(krealloc)
 
 
 #ifdef __cplusplus

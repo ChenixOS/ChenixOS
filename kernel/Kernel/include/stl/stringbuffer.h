@@ -49,6 +49,7 @@ public:
     }
 
     void format(const char* format, ...);
+    void vformat(const char* format, __builtin_va_list arg);
 
     void copy(StringBuffer* src) {
         append(src->c_str());

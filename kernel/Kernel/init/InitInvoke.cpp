@@ -19,6 +19,7 @@ static const char* g_StageNames[] = {
     "BusScan"
 };
 
+
 void CallInitFuncs(int stage) {
     if(stage != INIT_STAGE_DELAY) {
         klog_info("Init", "Calling init funcs for stage %s", g_StageNames[stage]);

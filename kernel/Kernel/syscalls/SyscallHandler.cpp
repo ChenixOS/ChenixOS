@@ -71,5 +71,6 @@ namespace SyscallHandler {
         Scheduler::ThreadCheckFlags(state, res);
         return res;
     }
+    EXPORT_DEF_SYMBOL(SyscallDispatcher);
 
 }

@@ -9,6 +9,8 @@
 #include "memory/MemoryManager.h"
 #include "task/Scheduler.h"
 
+#include "kernel/SymbolTable.h"
+
 static uint32 g_TerminalColor = 0xFFFFFF;
 static StickyLock g_PrintLock;
 
@@ -355,6 +357,7 @@ void kprintf(const char* format, ...)
 
     __builtin_va_end(arg);
 }
+EXPORT_DEF_SYMBOL(kprintf)
 
 void kvprintf(const char* format, __builtin_va_list arg) {
     g_PrintLock.Spinlock_Cli();
@@ -363,6 +366,7 @@ void kvprintf(const char* format, __builtin_va_list arg) {
     Terminal::End();
     g_PrintLock.Unlock_Cli();
 }
+EXPORT_DEF_SYMBOL(kvprintf)
 
 void kprintf_isr(const char* format, ...) {
     __builtin_va_list arg;

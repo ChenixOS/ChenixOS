@@ -1,5 +1,6 @@
 #include "string.h"
 #include "types.h"
+#include "kernel/SymbolTable.h"
 
 int kstrcmp(const char* a, const char* b)
 {
@@ -12,15 +13,7 @@ int kstrcmp(const char* a, const char* b)
     return 1;
 }
 
-int kstrcmp(const char* a, int aStart, int aEnd, const char* b)
-{
-    int length = aEnd - aStart;
-    for(int i = 0; i < length; i++) {
-        if(a[i + aStart] != b[i])
-            return 1;
-    }
-    return 0;
-}
+EXPORT_DEF_SYMBOL(kstrcmp)
 
 int kstrlen(const char* a)
 {
@@ -29,6 +22,7 @@ int kstrlen(const char* a)
         l++;
     return l;
 }
+EXPORT_DEF_SYMBOL(kstrlen)
 
 void kstrcpy(char* dest, const char* src)
 {
@@ -39,6 +33,7 @@ void kstrcpy(char* dest, const char* src)
     }
     dest[i] = '\0';
 }
+EXPORT_DEF_SYMBOL(kstrcpy);
 
 char *kstrncpy(char *dst, const char *src, size_t n)
 {
@@ -50,7 +45,7 @@ char *kstrncpy(char *dst, const char *src, size_t n)
         dst[i] = '\0';
     return dst;
 }
-
+EXPORT_DEF_SYMBOL(kstrncpy);
 
 void kstrconcat(char* dest, const char* a, const char* b)
 {
@@ -66,6 +61,7 @@ void kstrconcat(char* dest, const char* a, const char* b)
     }
     *dest = '\0';
 }
+EXPORT_DEF_SYMBOL(kstrconcat);
 
 
 int kstrncmp(const char *s1, const char *s2, size_t n)
@@ -76,6 +72,7 @@ int kstrncmp(const char *s1, const char *s2, size_t n)
     }
     return (n == 0) ? 0 : (*s1 - *s2);
 }
+EXPORT_DEF_SYMBOL(kstrncmp);
 
 
 // 辅助函数：反转字符串
@@ -134,3 +131,4 @@ char* itoa(int value, char* str, int base) {
 
     return str;
 }
+EXPORT_DEF_SYMBOL(itoa);

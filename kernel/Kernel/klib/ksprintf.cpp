@@ -3,6 +3,8 @@
 #include "klib/string.h"
 #include "stl/stringbuffer.h"
 
+#include "kernel/SymbolTable.h"
+
 struct Format {
     bool leftJustify;
     bool forceSign;
@@ -311,15 +313,49 @@ static void _kvsprintf(StringBuffer* sb, const char* format, __builtin_va_list a
     }
 }
 
-static void kvsprintf(StringBuffer* sb, const char* format, __builtin_va_list arg) {
-    _kvsprintf(sb, format, arg);
+void StringBuffer::vformat(const char* format, __builtin_va_list arg) {
+    _kvsprintf(this, format, arg);
 }
 
 void StringBuffer::format(const char* format, ...) {
     __builtin_va_list arg;
     __builtin_va_start(arg, format);
 
-    kvsprintf(this, format, arg);
+    this->vformat(format, arg);
 
     __builtin_va_end(arg);
 }
+
+int sprintf(char *str, const char *format, ...) {
+    __builtin_va_list arg;
+    StringBuffer sb;
+    
+    __builtin_va_start(arg, format);
+    sb.vformat(format, arg);
+    __builtin_va_end(arg);
+
+    if(str != nullptr) {
+        kstrcpy(str,sb.c_str());
+    }
+
+    return sb.count();
+}
+EXPORT_DEF_SYMBOL(sprintf);
+
+int snprintf(char *str, size_t size, const char *format, ...) {
+    __builtin_va_list arg;
+    StringBuffer sb;
+    
+    __builtin_va_start(arg, format);
+    sb.vformat(format, arg);
+    __builtin_va_end(arg);
+
+    if(str != nullptr) {
+        kstrncpy(str, sb.c_str(), size);
+    }
+
+    return sb.count();
+}
+
+EXPORT_DEF_SYMBOL(snprintf);
+

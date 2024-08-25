@@ -109,6 +109,8 @@ uint64 procfs_read_node(Node* node, uint64 pos, void* buffer, uint64 bufferSize)
     return 0;
 }
 
+// ==============================================================================================
+
 /**
  * @brief 添加ProcFs根目录的节点
  * 
@@ -131,6 +133,7 @@ void procfs_new_rootdir_sub_node(const char* name,
         proc_dir_nodes.push_back(node);
         proc_dir_tables.put(name,node);
 }
+EXPORT_DEF_SYMBOL(procfs_new_rootdir_sub_node);
 
 
 // ===========================================
@@ -162,6 +165,7 @@ static uint64 string_read_func(ProcNode* node,VFS::Node* in, uint64 pos, void* b
 void procfs_new_string_node(const char* name,char* text) {
     procfs_new_rootdir_sub_node(name,text,&none_stat_func,&string_read_func);
 }
+EXPORT_DEF_SYMBOL(procfs_new_string_node);
 
 // ====================================================
 
@@ -195,6 +199,7 @@ static uint64 string_callback_read_func(ProcNode* node,VFS::Node* in, uint64 pos
 void procfs_new_string_callback_node(const char* name,proc_string_callback_func_t callback) {
     procfs_new_rootdir_sub_node(name,(void*)callback,&none_stat_func,&string_callback_read_func);
 }
+EXPORT_DEF_SYMBOL(procfs_new_string_callback_node);
 
 // ===========================================
 // 这些是测试代码

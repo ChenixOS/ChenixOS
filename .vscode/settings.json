@@ -105,6 +105,9 @@
         "__threading_support": "cpp",
         "__tuple": "cpp",
         "__verbose_abort": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "*.def": "cpp",
+        "__availability": "cpp",
+        "version": "cpp"
     }
 }

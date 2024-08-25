@@ -1,10 +1,13 @@
 #include "memory.h"
+#include "kernel/SymbolTable.h"
 
 void kmemset(void* dest, int value, uint64 size)
 {
     for(uint64 i = 0; i < size; i++)
         ((char*)dest)[i] = value;
 }
+
+EXPORT_DEF_SYMBOL(kmemset);
 
 void kmemcpy(void* dest, const void* src, uint64 size) {
     char* d = (char*)dest;
@@ -16,6 +19,7 @@ void kmemcpy(void* dest, const void* src, uint64 size) {
     uint64 rem = size & 0x7;
     kmemcpyb(d + (numq << 3), s + (numq << 3), rem);
 }
+EXPORT_DEF_SYMBOL(kmemcpy);
 
 void kmemmove(void* dest, const void* src, uint64 size) {
     char* d = (char*)dest;
@@ -31,6 +35,7 @@ void kmemmove(void* dest, const void* src, uint64 size) {
         }
     }
 }
+EXPORT_DEF_SYMBOL(kmemmove);
 
 void kmemcpyb(void* dest, const void* src, uint64 size)
 {

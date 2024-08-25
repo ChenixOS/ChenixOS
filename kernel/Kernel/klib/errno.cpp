@@ -1,4 +1,5 @@
 #include "klib/errno.h"
+#include "kernel/SymbolTable.h"
 
 const char* ErrorToString(int64 error) {
     switch(error) {
@@ -36,3 +37,5 @@ const char* ErrorToString(int64 error) {
     default: return "unknown error";
     }
 }
+
+EXPORT_DEF_SYMBOL(ErrorToString);
