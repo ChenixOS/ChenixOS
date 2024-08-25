@@ -16,7 +16,7 @@ includes += $(root_dir)/dep/acpica/include
 
 optimize_flags := -freg-struct-return -fno-bounds-check -finline-functions -finline-limit=1200 -fno-threadsafe-statics
 
-compile_flags := -pie -fPIE -ffreestanding -fno-stack-protector -fno-exceptions -mno-sse -fno-rtti -fomit-frame-pointer -DACPI_LIBRARY -O2
+compile_flags := -pie -fPIE -ffreestanding -fno-stack-protector -fno-exceptions -mno-sse -fno-rtti -fomit-frame-pointer -DACPI_LIBRARY
 link_flags := -pie -fPIE -nostdlib -Wl,--no-dynamic-linker -e main -lgcc -T linker.ld
 
 ifeq ($(CONFIG),Debug)

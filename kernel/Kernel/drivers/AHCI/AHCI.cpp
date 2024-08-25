@@ -56,39 +56,6 @@ REGISTER_INIT_FUNC(AHCI_Registers,INIT_STAGE_BUSDRIVERS);
 #define AHCI_RESET_TIMEOUT     500 // 500 miliseconds
 #define AHCI_LINK_TIMEOUT       100 // 10 miliseconds
 
-static inline void writel(void *addr, uint32 val) {
-    barrier();
-    *(volatile uint32 *)addr = val;
-}
-static inline void writew(void *addr, uint16 val) {
-    barrier();
-    *(volatile uint16 *)addr = val;
-}
-static inline void writeb(void *addr, uint8 val) {
-    barrier();
-    *(volatile uint8 *)addr = val;
-}
-static inline uint64 readq(const void *addr) {
-    uint64 val = *(volatile const uint64 *)addr;
-    barrier();
-    return val;
-}
-static inline uint32 readl(const void *addr) {
-    uint32 val = *(volatile const uint32 *)addr;
-    barrier();
-    return val;
-}
-static inline uint16 readw(const void *addr) {
-    uint16 val = *(volatile const uint16 *)addr;
-    barrier();
-    return val;
-}
-static inline uint8 readb(const void *addr) {
-    uint8 val = *(volatile const uint8 *)addr;
-    barrier();
-    return val;
-}
-
 // 这是是跟PCI有关的
 static uint32 ahci_ctrl_readl(struct ahci_ctrl_s *ctrl, uint32 reg) {
 	// return PCI::ReadConfigDWord(*ctrl->pci_tmp, reg);
@@ -283,6 +250,7 @@ static int ahci_command(struct ahci_port_s *port_gf, int iswrite, int isatapi,
     
 	if (!success) { // 失败则清理port的flags并重置
         ahci_port_clear(ctrl, pnr);
+        klog_error("AHCI","Send AHCI command error, status=%d, error=%d", status, error);
     }
     return success ? 0 : -DISK_RET_ECONTROLLER;
 }
@@ -471,10 +439,13 @@ static int ahci_port_setup(struct ahci_port_s *port)
     cmd |= PORT_CMD_START;
     ahci_port_writel(ctrl, pnr, PORT_CMD, cmd);
 
+    Time::Delay(1);
+
     // TODO: VMWare执行时出错
     /* send command to device */
-    uint32 type = ahci_port_readl(ctrl, pnr, PORT_SIG);
+    uint32 type;
     for(int i = 0; i < 3; i++) {
+        type = ahci_port_readl(ctrl, pnr, PORT_SIG);
         if(type == SATA_SIG_ATA) {
             port->atapi = 0;
             sata_prep_simple(&port->cmd->fis, ATA_CMD_IDENTIFY_DEVICE);
@@ -495,6 +466,8 @@ static int ahci_port_setup(struct ahci_port_s *port)
                     break;
             }
         }
+
+        Time::Delay(1);
     }
     if(rc < 0)
         return rc;

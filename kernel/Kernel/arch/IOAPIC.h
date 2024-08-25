@@ -1,6 +1,6 @@
 #pragma once
 
-#include "KernelHeader.h"
+#include "global/KernelHeader.h"
 #include "interrupts/IDT.h"
 
 namespace IOAPIC {

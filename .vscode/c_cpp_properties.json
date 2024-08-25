@@ -8,6 +8,7 @@
                 "dep/gnu-efi/inc/x86_64",
                 "kernel/Kernel",
                 "kernel/Kernel/include",
+                "kernel/Kernel/include/global",
                 "libs/libsimpleos2",
                 "dep/acpica/include",
                 "libs/libc/include"

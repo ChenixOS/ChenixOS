@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.h"
-#include "KernelHeader.h"
+#include "global/KernelHeader.h"
 
 #define NUM_PAGES(size) (((size) + 4095) / 4096)
 

@@ -10,6 +10,9 @@ namespace EFIUtil {
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FileSystem;
     EFI_GRAPHICS_OUTPUT_PROTOCOL* Graphics;
 
+
+    
+
     void WaitForKey()
     {
         // clear any pending key presses

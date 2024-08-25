@@ -38,9 +38,20 @@ public:
         return true;
     }
 
+    void putc(char ch) {
+        char buffer[] = { ch, 0 };
+        this->append((const char*)&buffer);
+    }
+
     void append(int num) {
         char buf[50];
         append(itoa(num, buf, 10));
+    }
+
+    void format(const char* format, ...);
+
+    void copy(StringBuffer* src) {
+        append(src->c_str());
     }
 
     // 从缓冲区中读取字符串

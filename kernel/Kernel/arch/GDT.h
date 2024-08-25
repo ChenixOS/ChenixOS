@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.h"
-#include "KernelHeader.h"
+#include "global/KernelHeader.h"
 
 namespace GDT
 {

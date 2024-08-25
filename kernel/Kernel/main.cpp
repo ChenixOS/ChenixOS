@@ -1,4 +1,4 @@
-#include "KernelHeader.h"
+#include "global/KernelHeader.h"
 
 #include "terminal/terminal.h"
 #include "klib/stdio.h"
@@ -46,6 +46,8 @@
 extern "C" {
     #include "acpica/acpi.h"
 }
+
+#include "kernel/HeaderInfo.h"
 
 static int64 SetupInitProcess(uint64, uint64) {
     uint64 file;
@@ -244,7 +246,7 @@ extern "C" void __attribute__((noreturn)) main(KernelHeader* info) {
     
     MemoryManager::FreePages(MemoryManager::KernelToPhysPtr(info->smpTrampolineBuffer), info->smpTrampolineBufferPages);
     
-
+    HeaderInfo::Init(g_KernelHeader);
     Scheduler::CreateInitKernelThread(InitThread);
 
     Scheduler::ThreadUnsetSticky();

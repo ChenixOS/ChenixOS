@@ -37,14 +37,12 @@
 
 // 初始化
 static void Init() {
-    static IDEDeviceDriver* driver = new IDEDeviceDriver();
-    driver->ScanDevice();
+    // static IDEDeviceDriver* driver = new IDEDeviceDriver();
+    // driver->ScanDevice();
 }
 REGISTER_INIT_FUNC(Init,INIT_STAGE_BUSDRIVERS);
 
 static StickyLock* ideLock;
-static FIFOBuffer<struct disk_op_s *> ide_queue(0);
-static volatile int block_flags = 0; // 额外一层保证
 
 // Wait for IDE disk to become ready.
 static int
@@ -60,25 +58,13 @@ await_ide(int checkerr)
   return 0;
 }
 
-// Wait for block flags (more safely)
-static void
-await_block_flags()
-{
-    volatile int* block_flags_ptr = &block_flags;
-
-    barrier();
-    for(;block_flags || *block_flags_ptr;) {
-        barrier();
-        Scheduler::Yield();
-    }
-}
-
 // 提交请求到PIO设备
-static void
+static bool
 post_ide_request(struct drive_s* drive,struct disk_op_s* op) {
     int sector = op->lba;
     int read_cmd = (op->count == 1) ? IDE_CMD_READ :  IDE_CMD_RDMUL;
     int write_cmd = (op->count == 1) ? IDE_CMD_WRITE : IDE_CMD_WRMUL;
+    bool b;
 
     await_ide(0);
     Port::OutByte(0x3f6, 0);  // generate interrupt
@@ -88,47 +74,29 @@ post_ide_request(struct drive_s* drive,struct disk_op_s* op) {
     Port::OutByte(0x1f5, (sector >> 16) & 0xff);
     Port::OutByte(0x1f6, 0xe0 | ((drive->cntl_id & 1) << 4) | ((sector >> 24) & 0x0f));
 
-    if(op->isWrite){
+    Time::Delay(1);
+
+    if(op->isWrite) {
         Port::OutByte(0x1f7, write_cmd);
         outsl(0x1f0, (uint32*) op->buf_fl, (op->count * SECTOR_SIZE) / 4);
     } else {
         Port::OutByte(0x1f7, read_cmd);
     }
+    Time::Delay(10);
+    
+    await_ide(0);
+
+    b = (await_ide(1) >= 0);
+    if(!op->isWrite && b) {
+        insl(0x1f0, (uint32*) op->buf_fl, (op->count * SECTOR_SIZE) / 4);
+    }
+
+    return b;
 }
 
 // 中断处理程序，从这里开始接收数据
 void ide_request_isr(IDT::Registers* regs) {
-    struct disk_op_s* op;
-
     klog_info_isr("IDE","IDE IRQ !!!!");
-
-    barrier();
-    block_flags = 1;
-
-    bool hasReq = ide_queue.pop(op);
-    if(!hasReq)
-        goto finish;
-    
-    if (!op->isWrite && await_ide(1) >= 0) {
-        insl(0x1f0, (uint32 *)op->buf_fl, (op->count * SECTOR_SIZE) / 4);
-        op->isSuccess = true;
-    } else {
-        op->isSuccess = false;
-    }
-    op->isFinish = true;
-
-finish:
-    barrier();
-    block_flags = 0;
-}
-
-static void
-await_disk_op_finish(struct disk_op_s* op) {
-    barrier();
-    for(; !op->isFinish;) {
-        barrier();
-        Scheduler::Yield();
-    }
 }
 
 // ==============================================================================
@@ -139,29 +107,14 @@ pio_ide_readwrite(struct drive_s* drive,
     uint64 startBlock,
     uint64 numBlock,
     void* buffer) {
+        klog_info("IDE","PIO Req: %s %X %X +%X -> %X",isWrite ? "W" : "R",drive,startBlock,numBlock,buffer);
+
         struct disk_op_s op;
-        op.isWrite = isWrite;
-        op.isSuccess = false;
         op.buf_fl = buffer;
-        op.count = numBlock;
         op.lba = startBlock;
-
-        await_block_flags();
-        ideLock->Spinlock();
-        await_block_flags();
-        
-        ide_queue.push(&op);
-        post_ide_request(drive, &op);
-
-        klog_info("IDE","Wait for finish.");
-        await_disk_op_finish(&op);
-
-        ideLock->Unlock();
-
-        if(!isWrite && !op.isSuccess) {
-            return false;
-        }
-        return true;
+        op.count = numBlock;
+        op.isWrite = isWrite;
+        return post_ide_request(drive, &op);
 }
 
 // 默认构造
@@ -170,6 +123,7 @@ IDEDeviceDriver::IDEDeviceDriver()
 }
 	
 void IDEDeviceDriver::DriveReadData(struct drive_s* drive,uint64 startBlock,uint64 numBlocks,void* buffer, Atomic<uint64>* finishFlag, Atomic<uint64>* successFlag) {
+    memset(buffer, 0, drive->blksize * numBlocks);
     bool b = pio_ide_readwrite(drive,false,startBlock,numBlocks,buffer);
     successFlag->Write(b);
     finishFlag->Write(1);
@@ -188,7 +142,9 @@ void IDEDeviceDriver::ScanDevice() {
     await_ide(0);
     IOAPIC::RegisterIRQ(14, ide_request_isr);
 
-    for(uint32 id = 0; id < 2; id++) {
+
+    // TODO: IDE驱动有问题
+    /*for(uint32 id = 0; id < 2; id++) {
         // Check if disk 1 is present
         Port::OutByte(0x1f6, 0xe0 | (id << 4));
         Time::Delay(5);
@@ -205,6 +161,6 @@ void IDEDeviceDriver::ScanDevice() {
         }
     }
     // Switch back to disk 0.
-    Port::OutByte(0x1f6, 0xe0 | (0 << 4));
+    Port::OutByte(0x1f6, 0xe0 | (0 << 4));*/
 }
 
