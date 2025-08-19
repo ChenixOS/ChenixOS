@@ -199,6 +199,7 @@ static uint64 string_callback_read_func(ProcNode* node,VFS::Node* in, uint64 pos
 void procfs_new_string_callback_node(const char* name,proc_string_callback_func_t callback) {
     procfs_new_rootdir_sub_node(name,(void*)callback,&none_stat_func,&string_callback_read_func);
 }
+
 EXPORT_DEF_SYMBOL(procfs_new_string_callback_node);
 
 // ===========================================
@@ -208,6 +209,7 @@ static void MyInit() {
     proc_dir_nodes.push_back(&rootNode);
     // procfs_new_rootdir_sub_node("hello",nullptr,&none_stat_func,nullptr);
     procfs_new_string_node("hello","Hello World");
+    procfs_new_string_node("version", "0.11");
 }
 
 REGISTER_INIT_FUNC(MyInit, INIT_STAGE_FSDRIVERS);
